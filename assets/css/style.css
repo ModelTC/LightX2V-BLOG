@@ -175,9 +175,11 @@ img {
    Translate Dropdown
    ============================ */
 
-/* Suppress Google's own UI chrome */
+/* Suppress Google & Baidu default UI chrome */
 .goog-te-banner-frame,
 .skiptranslate { display: none !important; }
+.baidu-translate-popup,
+#baiduTranslateBar { display: none !important; }
 
 .translate-wrap {
   position: relative;

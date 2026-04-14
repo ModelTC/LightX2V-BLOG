@@ -20,7 +20,7 @@
 
   {% include footer.html %}
 
-  <!-- Google Translate (loads async; may be blocked in some regions) -->
+  <!-- Google Translate Widget (works outside China) -->
   <script>
     function googleTranslateElementInit() {
       new google.translate.TranslateElement({
@@ -31,6 +31,15 @@
     }
   </script>
   <script async src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <!-- Baidu Translate Widget (works in China) -->
+  <script>
+    window.baiduTranslateConfig = {
+      delay: 0,
+      translateElement: 'baidu_translate_element'
+    };
+  </script>
+  <script async src="https://fanyi-cdn.cdn.bcebos.com/webStatic/translation/js/index.js"></script>
 
   <script>
     // ── Dark mode ──────────────────────────────────────────────
@@ -115,6 +124,13 @@
         next();
       }
 
+      // Baidu language codes (differ from standard)
+      var baiduLang = {
+        'zh-CN': 'zh',  'fr': 'fra', 'ja': 'jp',
+        'ko':    'kor',  'de': 'de',  'es': 'spa',
+        'pt':    'pt',   'ar': 'ara'
+      };
+
       // ── Apply translation ────────────────────────────────────
       function applyTranslation(lang) {
         if (lang === 'en') {
@@ -125,7 +141,7 @@
             originalHTML = null;
             return;
           }
-          // Otherwise clear Google Translate cookies and reload
+          // Clear Google Translate cookies and reload to restore original
           ['', location.hostname, '.' + location.hostname].forEach(function(d) {
             document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/' + (d ? '; domain=' + d : '');
           });
@@ -133,15 +149,23 @@
           return;
         }
 
-        // Try Google Translate widget (available outside China)
-        var select = document.querySelector('#google_translate_element select');
-        if (select) {
-          select.value = lang;
-          select.dispatchEvent(new Event('change'));
+        // 1st: Try Google Translate widget (works outside China)
+        var gSelect = document.querySelector('#google_translate_element select');
+        if (gSelect) {
+          gSelect.value = lang;
+          gSelect.dispatchEvent(new Event('change'));
           return;
         }
 
-        // Fallback: MyMemory in-page translation (works in China)
+        // 2nd: Try Baidu Translate widget (works in China)
+        var bSelect = document.querySelector('#baidu_translate_element select');
+        if (bSelect) {
+          bSelect.value = baiduLang[lang] || lang;
+          bSelect.dispatchEvent(new Event('change'));
+          return;
+        }
+
+        // 3rd: MyMemory in-page translation (final fallback)
         translateInPage(lang);
       }
 

@@ -20,17 +20,17 @@
 
   {% include footer.html %}
 
-  <!-- Google Translate -->
+  <!-- Google Translate (loads async; may be blocked in some regions) -->
   <script>
     function googleTranslateElementInit() {
       new google.translate.TranslateElement({
         pageLanguage: 'en',
-        includedLanguages: 'zh-CN,zh-TW,ja,ko,fr,de,es,ar',
+        includedLanguages: 'zh-CN,fr,ja,ko,de,es,pt,ar',
         autoDisplay: false
       }, 'google_translate_element');
     }
   </script>
-  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+  <script async src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
   <script>
     // Dark mode toggle
@@ -45,22 +45,92 @@
       });
     })();
 
-    // Translate button: click triggers the hidden Google Translate select
+    // Translation dropdown
     (function() {
-      var btn = document.getElementById('translateBtn');
-      if (!btn) return;
-      btn.addEventListener('click', function() {
-        var select = document.querySelector('#google_translate_element select');
-        if (select) {
-          // Toggle: if already translated (not 'en'), reset; otherwise open picker
-          if (select.value && select.value !== '') {
-            select.value = '';
+      var toggleBtn  = document.getElementById('translateBtn');
+      var dropdown   = document.getElementById('translateDropdown');
+      var currentLbl = document.getElementById('currentLang');
+      var wrap       = document.getElementById('translateWrap');
+      if (!toggleBtn || !dropdown) return;
+
+      // Detect if Google Translate widget loaded (fails when blocked)
+      var googleReady = false;
+      var gtCheckTimer = setInterval(function() {
+        if (document.querySelector('#google_translate_element select')) {
+          googleReady = true;
+          clearInterval(gtCheckTimer);
+        }
+      }, 200);
+      setTimeout(function() { clearInterval(gtCheckTimer); }, 5000);
+
+      // Fallback URLs for when Google is blocked
+      var baiduLangs = { 'zh-CN': 'zh' };
+      var fallbackUrl = function(lang) {
+        var pageUrl = encodeURIComponent(window.location.href);
+        if (baiduLangs[lang]) {
+          // Use Baidu for Chinese
+          return 'https://fanyi.baidu.com/transpage?source=url&ie=utf8&from=auto&to='
+                 + baiduLangs[lang] + '&render=1&url=' + pageUrl;
+        }
+        // Use Google Translate framed URL for others
+        return 'https://translate.google.com/translate?sl=auto&tl=' + lang + '&u=' + pageUrl;
+      };
+
+      function applyTranslation(lang) {
+        if (lang === 'en') {
+          // Reset: reload original page (strip any translate.goog domain)
+          var url = window.location.href;
+          if (url.indexOf('.translate.goog') !== -1) {
+            url = url.replace(/^https?:\/\/[^/]*\.translate\.goog/, 'https://' + window.location.hostname.replace(/-/g, '.').replace('.translate.goog', ''));
+          }
+          window.location.reload();
+          return;
+        }
+
+        if (googleReady) {
+          var select = document.querySelector('#google_translate_element select');
+          if (select) {
+            select.value = lang;
             select.dispatchEvent(new Event('change'));
-          } else {
-            select.value = 'zh-CN';
-            select.dispatchEvent(new Event('change'));
+            return;
           }
         }
+        // Google not available — open fallback in new tab
+        window.open(fallbackUrl(lang), '_blank');
+      }
+
+      // Toggle dropdown
+      toggleBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var open = dropdown.classList.toggle('open');
+        toggleBtn.setAttribute('aria-expanded', open);
+      });
+
+      // Close on outside click
+      document.addEventListener('click', function(e) {
+        if (!wrap.contains(e.target)) {
+          dropdown.classList.remove('open');
+          toggleBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Option click
+      dropdown.querySelectorAll('.translate-option').forEach(function(opt) {
+        opt.addEventListener('click', function() {
+          var lang  = opt.getAttribute('data-lang');
+          var label = opt.getAttribute('data-label');
+
+          // Update active state
+          dropdown.querySelectorAll('.translate-option').forEach(function(o) {
+            o.classList.remove('active');
+          });
+          opt.classList.add('active');
+          currentLbl.textContent = label;
+
+          dropdown.classList.remove('open');
+          toggleBtn.setAttribute('aria-expanded', 'false');
+          applyTranslation(lang);
+        });
       });
     })();
 

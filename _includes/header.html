@@ -5,15 +5,29 @@
       <nav class="site-nav">
         <a href="{{ '/about' | relative_url }}" {% if page.url contains '/about' %}class="active"{% endif %}>About</a>
 
-        <div class="translate-wrap">
-          <button class="translate-btn" id="translateBtn" aria-label="Translate page">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="translate-wrap" id="translateWrap">
+          <button class="translate-btn" id="translateBtn" aria-label="Translate page" aria-expanded="false">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/>
               <path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/>
             </svg>
-            <span>译</span>
+            <span id="currentLang">EN</span>
+            <svg class="chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
           </button>
-          <div id="google_translate_element"></div>
+          <div class="translate-dropdown" id="translateDropdown" role="listbox">
+            <button class="translate-option active" data-lang="en"   data-label="EN">🇺🇸 English</button>
+            <button class="translate-option"        data-lang="zh-CN" data-label="中文">🇨🇳 中文简体</button>
+            <button class="translate-option"        data-lang="fr"   data-label="FR">🇫🇷 Français</button>
+            <button class="translate-option"        data-lang="ja"   data-label="日本語">🇯🇵 日本語</button>
+            <button class="translate-option"        data-lang="ko"   data-label="KO">🇰🇷 한국어</button>
+            <button class="translate-option"        data-lang="de"   data-label="DE">🇩🇪 Deutsch</button>
+            <button class="translate-option"        data-lang="es"   data-label="ES">🇪🇸 Español</button>
+            <button class="translate-option"        data-lang="pt"   data-label="PT">🇧🇷 Português</button>
+            <button class="translate-option"        data-lang="ar"   data-label="AR">🇸🇦 العربية</button>
+          </div>
+          <div id="google_translate_element" style="display:none"></div>
         </div>
 
         <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">

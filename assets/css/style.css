@@ -172,30 +172,21 @@ img {
 }
 
 /* ============================
-   Translate Button
+   Translate Dropdown
    ============================ */
+
+/* Suppress Google's own UI chrome */
+.goog-te-banner-frame,
+.skiptranslate { display: none !important; }
+
 .translate-wrap {
   position: relative;
-}
-
-/* Hide the default Google Translate widget UI */
-#google_translate_element {
-  display: none;
-}
-
-.goog-te-banner-frame,
-.skiptranslate {
-  display: none !important;
-}
-
-body {
-  top: 0 !important;
 }
 
 .translate-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   padding: 0 10px;
   height: 32px;
   background: none;
@@ -207,18 +198,75 @@ body {
   font-size: 0.8125rem;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
   white-space: nowrap;
+  user-select: none;
 }
 
-.translate-btn:hover {
+.translate-btn:hover,
+.translate-btn[aria-expanded="true"] {
   color: var(--color-text);
   border-color: var(--color-text-secondary);
   background: var(--color-border-light);
 }
 
-.translate-btn.active {
+.chevron {
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.translate-btn[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.translate-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 150px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  z-index: 200;
+}
+
+.translate-dropdown.open {
+  display: block;
+  animation: dropdownIn 0.15s ease;
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.translate-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+
+.translate-option:hover {
   background: var(--color-border-light);
-  border-color: var(--color-text-secondary);
   color: var(--color-text);
+}
+
+.translate-option.active {
+  color: var(--color-text);
+  font-weight: 500;
 }
 
 .theme-toggle {

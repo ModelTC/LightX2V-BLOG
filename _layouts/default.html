@@ -62,18 +62,18 @@
         overlay.id = 'translateBlockedOverlay';
         overlay.className = 'translate-blocked-overlay';
         overlay.setAttribute('role', 'dialog');
-        overlay.innerHTML =
-          '<div class="translate-blocked-card">' +
-          '<h3>无法使用 Google 翻译</h3>' +
-          '<p>当前页面无法加载 Google 翻译服务。若您位于<strong>中国大陆</strong>等无法访问 Google 的地区，会出现此情况。</p>' +
-          '<p>您可以尝试：</p>' +
-          '<ul>' +
-          '<li>使用 <strong>Microsoft Edge</strong> 浏览器，在页面空白处右键 →「翻译为中文（简体）」</li>' +
-          '<li>安装浏览器翻译扩展，例如 <strong>沉浸式翻译</strong>、<strong>沙拉查词</strong> 等</li>' +
-          '<li>使用手机自带浏览器或国际版浏览器的全文翻译功能</li>' +
-          '</ul>' +
-          '<button type="button" class="translate-blocked-close">知道了</button>' +
-          '</div>';
+        overlay.innerHTML = `
+          <div class="translate-blocked-card">
+            <h3>无法使用 Google 翻译</h3>
+            <p>当前页面无法加载 Google 翻译服务。若您位于<strong>中国大陆</strong>等无法访问 Google 的地区，会出现此情况。</p>
+            <p>您可以尝试：</p>
+            <ul>
+              <li>安装浏览器翻译扩展，例如 <strong>沉浸式翻译</strong>等</li>
+              <li>使用您浏览器自带的全文翻译功能</li>
+            </ul>
+            <button type="button" class="translate-blocked-close">知道了</button>
+          </div>
+        `;
         document.body.appendChild(overlay);
         function close() {
           overlay.remove();

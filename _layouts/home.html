@@ -11,8 +11,9 @@ layout: default
     </div>
 
     <div class="post-list">
-      {% assign posts_by_year = site.posts | group_by_exp: "post", "post.date | date: '%Y'" %}
-      {% for year_group in posts_by_year %}
+      {% assign articles = site.articles | sort: 'date' | reverse %}
+      {% assign articles_by_year = articles | group_by_exp: "post", "post.date | date: '%Y'" %}
+      {% for year_group in articles_by_year %}
         <div class="post-year-group">
           <h2 class="post-year">{{ year_group.name }}</h2>
           <ul class="posts">
@@ -36,9 +37,9 @@ layout: default
       {% endfor %}
     </div>
 
-    {% if site.posts.size == 0 %}
+    {% if site.articles.size == 0 %}
     <div class="empty-state">
-      <p>还没有文章，在 <code>_posts/</code> 目录下新建 Markdown 文件开始写作吧。</p>
+      <p>No posts yet. Create a Markdown file in <code>_articles/</code> to get started.</p>
     </div>
     {% endif %}
 

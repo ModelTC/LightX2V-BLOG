@@ -11,17 +11,18 @@ baseurl: "/LightX2V-BLOG"
 # 构建设置
 markdown: kramdown
 highlighter: rouge
-permalink: /posts/:year/:month/:day/:title/
+
+# Collections
+collections:
+  articles:
+    output: true
+    permalink: /posts/:title/
 
 # 插件
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
   - jekyll-sitemap
-
-# 分页（可选）
-paginate: 10
-paginate_path: "/page/:num/"
 
 # 排除不需要构建的文件
 exclude:
@@ -38,7 +39,6 @@ timezone: Asia/Shanghai
 defaults:
   - scope:
       path: ""
-      type: "posts"
+      type: "articles"
     values:
       layout: "post"
-      author: "Your Name"

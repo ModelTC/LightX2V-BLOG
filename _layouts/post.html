@@ -8,20 +8,18 @@ layout: default
     <header class="post-header">
       <div class="post-meta">
         <time datetime="{{ page.date | date_to_xmlschema }}">
-          {{ page.date | date: "%Y年%m月%d日" }}
+          {{ page.date | date: "%Y-%m-%d" }}
         </time>
-        {% if page.author %}
-          <span class="sep">·</span>
-          <span>{{ page.author }}</span>
-        {% endif %}
-        {% assign words = content | number_of_words %}
         <span class="sep">·</span>
-        <span>约 {{ words | divided_by: 200 | plus: 1 }} 分钟读完</span>
+        <span>{{ site.author.name }}</span>
       </div>
+
       <h1 class="post-heading">{{ page.title }}</h1>
-      {% if page.excerpt and page.show_excerpt != false %}
+
+      {% if page.subtitle %}
       <p class="post-subtitle">{{ page.subtitle }}</p>
       {% endif %}
+
       {% if page.tags.size > 0 %}
       <div class="post-tags">
         {% for tag in page.tags %}
@@ -36,23 +34,39 @@ layout: default
     </div>
 
     <footer class="post-footer">
+      {% assign all_articles = site.articles | sort: 'date' | reverse %}
+      {% assign prev_article = nil %}
+      {% assign next_article = nil %}
+      {% assign found = false %}
+      {% for article in all_articles %}
+        {% if found and next_article == nil %}
+          {% assign next_article = article %}
+        {% endif %}
+        {% if article.url == page.url %}
+          {% assign found = true %}
+        {% endif %}
+        {% unless found %}
+          {% assign prev_article = article %}
+        {% endunless %}
+      {% endfor %}
+
       <div class="post-nav">
-        {% if page.previous.url %}
-        <a class="post-nav__prev" href="{{ page.previous.url | relative_url }}">
-          <span class="nav-label">← 上一篇</span>
-          <span class="nav-title">{{ page.previous.title }}</span>
+        {% if next_article %}
+        <a class="post-nav__prev" href="{{ next_article.url | relative_url }}">
+          <span class="nav-label">← Prev</span>
+          <span class="nav-title">{{ next_article.title }}</span>
         </a>
         {% endif %}
-        {% if page.next.url %}
-        <a class="post-nav__next" href="{{ page.next.url | relative_url }}">
-          <span class="nav-label">下一篇 →</span>
-          <span class="nav-title">{{ page.next.title }}</span>
+        {% if prev_article %}
+        <a class="post-nav__next" href="{{ prev_article.url | relative_url }}">
+          <span class="nav-label">Next →</span>
+          <span class="nav-title">{{ prev_article.title }}</span>
         </a>
         {% endif %}
       </div>
 
       <div class="back-home">
-        <a href="{{ '/' | relative_url }}">← 返回首页</a>
+        <a href="{{ '/' | relative_url }}">← Back</a>
       </div>
     </footer>
 

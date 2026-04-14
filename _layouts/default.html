@@ -20,6 +20,18 @@
 
   {% include footer.html %}
 
+  <!-- Google Translate -->
+  <script>
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'zh-CN,zh-TW,ja,ko,fr,de,es,ar',
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
   <script>
     // Dark mode toggle
     (function() {
@@ -30,6 +42,25 @@
         var next = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('theme', next);
+      });
+    })();
+
+    // Translate button: click triggers the hidden Google Translate select
+    (function() {
+      var btn = document.getElementById('translateBtn');
+      if (!btn) return;
+      btn.addEventListener('click', function() {
+        var select = document.querySelector('#google_translate_element select');
+        if (select) {
+          // Toggle: if already translated (not 'en'), reset; otherwise open picker
+          if (select.value && select.value !== '') {
+            select.value = '';
+            select.dispatchEvent(new Event('change'));
+          } else {
+            select.value = 'zh-CN';
+            select.dispatchEvent(new Event('change'));
+          }
+        }
       });
     })();
 

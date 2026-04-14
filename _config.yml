@@ -5,8 +5,8 @@ author:
   email: "lightx2v2025@163.com"
   bio: "Writer, thinker, builder."
 
-url: "https://light-ai.top/LightX2V-BLOG/"  # 部署后填入: https://yourusername.github.io
-baseurl: ""  # 如果仓库名不是 username.github.io，填入: /my-blog
+url: "https://light-ai.top"
+baseurl: "/LightX2V-BLOG"
 
 # 构建设置
 markdown: kramdown

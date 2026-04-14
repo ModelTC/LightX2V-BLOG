@@ -11,6 +11,8 @@ baseurl: "/LightX2V-BLOG"
 # 构建设置
 markdown: kramdown
 highlighter: rouge
+kramdown:
+  math_engine: mathjax
 
 # Collections
 collections:

@@ -352,7 +352,7 @@ img {
   font-family: var(--font-serif);
   font-size: 1.0625rem;
   line-height: 1.85;
-  color: #1a1a1a;
+  color: var(--color-text);
 }
 
 .post-content h1,

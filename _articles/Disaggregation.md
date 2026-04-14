@@ -1,6 +1,7 @@
 ---
 layout: post
 title: "Breaking the Memory and Throughput Bottlenecks of Diffusion Model Inference"
+author: "LightX2V and Mooncake"
 date: 2026-04-14
 tags: [Disaggregation Deploy]
 ---

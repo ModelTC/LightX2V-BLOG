@@ -10,12 +10,6 @@ layout: default
       <p class="home-desc">{{ site.description }}</p>
     </div>
 
-    <div class="lang-filter" id="langFilter">
-      <button class="lang-btn active" data-lang="all">All</button>
-      <button class="lang-btn" data-lang="en">English</button>
-      <button class="lang-btn" data-lang="zh">中文</button>
-    </div>
-
     <div class="post-list">
       {% assign posts_by_year = site.posts | group_by_exp: "post", "post.date | date: '%Y'" %}
       {% for year_group in posts_by_year %}
@@ -23,15 +17,11 @@ layout: default
           <h2 class="post-year">{{ year_group.name }}</h2>
           <ul class="posts">
             {% for post in year_group.items %}
-            {% assign post_lang = post.lang | default: '' %}
-            <li class="post-item" data-lang="{{ post_lang }}">
+            <li class="post-item">
               <time class="post-date" datetime="{{ post.date | date_to_xmlschema }}">
                 {{ post.date | date: "%m-%d" }}
               </time>
               <a class="post-title-link" href="{{ post.url | relative_url }}">{{ post.title }}</a>
-              {% if post_lang != '' %}
-              <span class="lang-badge lang-badge--{{ post_lang }}">{{ post_lang | upcase }}</span>
-              {% endif %}
               {% if post.tags.size > 0 %}
               <span class="post-tags">
                 {% for tag in post.tags limit:2 %}
@@ -48,37 +38,9 @@ layout: default
 
     {% if site.posts.size == 0 %}
     <div class="empty-state">
-      <p>No posts yet. Create a Markdown file in <code>_posts/</code> to get started.</p>
+      <p>还没有文章，在 <code>_posts/</code> 目录下新建 Markdown 文件开始写作吧。</p>
     </div>
     {% endif %}
 
   </div>
 </div>
-
-<script>
-  const buttons = document.querySelectorAll('.lang-btn');
-  const items = document.querySelectorAll('.post-item');
-  const yearGroups = document.querySelectorAll('.post-year-group');
-
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      buttons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      const lang = btn.dataset.lang;
-      items.forEach(item => {
-        const itemLang = item.dataset.lang;
-        if (lang === 'all') {
-          item.style.display = '';
-        } else if (lang === 'en' || lang === 'zh') {
-          item.style.display = (itemLang === lang) ? '' : 'none';
-        }
-      });
-
-      yearGroups.forEach(group => {
-        const visible = [...group.querySelectorAll('.post-item')].some(i => i.style.display !== 'none');
-        group.style.display = visible ? '' : 'none';
-      });
-    });
-  });
-</script>

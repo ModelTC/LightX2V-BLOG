@@ -1,11 +1,11 @@
-title: "My Blog"
+title: "LightX2V Blog"
 description: "thoughts, notes, and things I find interesting"
 author:
-  name: "Your Name"
-  email: "you@example.com"
+  name: "LightX2V"
+  email: "lightx2v2025@163.com"
   bio: "Writer, thinker, builder."
 
-url: ""  # 部署后填入: https://yourusername.github.io
+url: "https://light-ai.top/LightX2V-BLOG/"  # 部署后填入: https://yourusername.github.io
 baseurl: ""  # 如果仓库名不是 username.github.io，填入: /my-blog
 
 # 构建设置

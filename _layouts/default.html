@@ -31,15 +31,10 @@
     }
   </script>
   <script async src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
-  <!-- Baidu Translate Widget (works in China) -->
-  <script>
-    window.baiduTranslateConfig = {
-      delay: 0,
-      translateElement: 'baidu_translate_element'
-    };
-  </script>
-  <script async src="https://fanyi-cdn.cdn.bcebos.com/webStatic/translation/js/index.js"></script>
+  <!--
+    Baidu 整页翻译 Widget：曾用的 CDN 脚本实测不可用（404/403，且官方仅推广浏览器插件+手动输入网址，
+    无稳定免费的第三方站点嵌入方案）。国内用户在 Google 被屏蔽时由下方 MyMemory 接口兜底。
+  -->
 
   <script>
     // ── Dark mode ──────────────────────────────────────────────
@@ -124,13 +119,6 @@
         next();
       }
 
-      // Baidu language codes (differ from standard)
-      var baiduLang = {
-        'zh-CN': 'zh',  'fr': 'fra', 'ja': 'jp',
-        'ko':    'kor',  'de': 'de',  'es': 'spa',
-        'pt':    'pt',   'ar': 'ara'
-      };
-
       // ── Apply translation ────────────────────────────────────
       function applyTranslation(lang) {
         if (lang === 'en') {
@@ -149,7 +137,7 @@
           return;
         }
 
-        // 1st: Try Google Translate widget (works outside China)
+        // Google Translate widget (blocked in mainland China → select missing)
         var gSelect = document.querySelector('#google_translate_element select');
         if (gSelect) {
           gSelect.value = lang;
@@ -157,15 +145,7 @@
           return;
         }
 
-        // 2nd: Try Baidu Translate widget (works in China)
-        var bSelect = document.querySelector('#baidu_translate_element select');
-        if (bSelect) {
-          bSelect.value = baiduLang[lang] || lang;
-          bSelect.dispatchEvent(new Event('change'));
-          return;
-        }
-
-        // 3rd: MyMemory in-page translation (final fallback)
+        // MyMemory API: in-page translation, works without Google/Baidu
         translateInPage(lang);
       }
 

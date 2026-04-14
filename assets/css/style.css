@@ -175,9 +175,9 @@ img {
    Translate Dropdown
    ============================ */
 
-/* Suppress Microsoft Translator's own UI chrome */
-#MicrosoftTranslatorWidget > *:not(select) { display: none !important; }
-.ms-translator-banner { display: none !important; }
+/* Suppress Google's own UI chrome */
+.goog-te-banner-frame,
+.skiptranslate { display: none !important; }
 
 .translate-wrap {
   position: relative;

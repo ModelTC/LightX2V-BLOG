@@ -20,17 +20,15 @@
 
   {% include footer.html %}
 
-  <!-- Google Translate (loads async; may be blocked in some regions) -->
+  <!-- Microsoft Translator Widget -->
   <script>
-    function googleTranslateElementInit() {
-      new google.translate.TranslateElement({
-        pageLanguage: 'en',
-        includedLanguages: 'zh-CN,fr,ja,ko,de,es,pt,ar',
-        autoDisplay: false
-      }, 'google_translate_element');
-    }
+    setTimeout(function() {
+      var s = document.createElement('script');
+      s.src = 'https://www.bing.com/translator/static/ext/widget/v1/widget.js';
+      s.async = true;
+      document.body.appendChild(s);
+    }, 0);
   </script>
-  <script async src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
   <script>
     // Dark mode toggle
@@ -53,50 +51,47 @@
       var wrap       = document.getElementById('translateWrap');
       if (!toggleBtn || !dropdown) return;
 
-      // Detect if Google Translate widget loaded (fails when blocked)
-      var googleReady = false;
-      var gtCheckTimer = setInterval(function() {
-        if (document.querySelector('#google_translate_element select')) {
-          googleReady = true;
-          clearInterval(gtCheckTimer);
+      // Microsoft Translator language code mapping
+      var msLangMap = {
+        'zh-CN': 'zh-Hans',
+        'fr':    'fr',
+        'ja':    'ja',
+        'ko':    'ko',
+        'de':    'de',
+        'es':    'es',
+        'pt':    'pt',
+        'ar':    'ar'
+      };
+
+      // Detect when Microsoft Translator widget has loaded
+      var msReady = false;
+      var msCheckTimer = setInterval(function() {
+        if (document.querySelector('#MicrosoftTranslatorWidget select')) {
+          msReady = true;
+          clearInterval(msCheckTimer);
         }
       }, 200);
-      setTimeout(function() { clearInterval(gtCheckTimer); }, 5000);
-
-      // Fallback URLs for when Google is blocked
-      var baiduLangs = { 'zh-CN': 'zh' };
-      var fallbackUrl = function(lang) {
-        var pageUrl = encodeURIComponent(window.location.href);
-        if (baiduLangs[lang]) {
-          // Use Baidu for Chinese
-          return 'https://fanyi.baidu.com/transpage?source=url&ie=utf8&from=auto&to='
-                 + baiduLangs[lang] + '&render=1&url=' + pageUrl;
-        }
-        // Use Google Translate framed URL for others
-        return 'https://translate.google.com/translate?sl=auto&tl=' + lang + '&u=' + pageUrl;
-      };
+      setTimeout(function() { clearInterval(msCheckTimer); }, 6000);
 
       function applyTranslation(lang) {
         if (lang === 'en') {
-          // Reset: reload original page (strip any translate.goog domain)
-          var url = window.location.href;
-          if (url.indexOf('.translate.goog') !== -1) {
-            url = url.replace(/^https?:\/\/[^/]*\.translate\.goog/, 'https://' + window.location.hostname.replace(/-/g, '.').replace('.translate.goog', ''));
-          }
           window.location.reload();
           return;
         }
 
-        if (googleReady) {
-          var select = document.querySelector('#google_translate_element select');
+        var msLang = msLangMap[lang] || lang;
+
+        if (msReady) {
+          var select = document.querySelector('#MicrosoftTranslatorWidget select');
           if (select) {
-            select.value = lang;
+            select.value = msLang;
             select.dispatchEvent(new Event('change'));
             return;
           }
         }
-        // Google not available — open fallback in new tab
-        window.open(fallbackUrl(lang), '_blank');
+        // Fallback: open Microsoft Translator full-page translation in new tab
+        var pageUrl = encodeURIComponent(window.location.href);
+        window.open('https://www.translatetheweb.com/?from=en&to=' + msLang + '&a=' + pageUrl, '_blank');
       }
 
       // Toggle dropdown

@@ -33,19 +33,18 @@
   <script async src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
   <script>
-    // Dark mode toggle
+    // ── Dark mode ──────────────────────────────────────────────
     (function() {
       var btn = document.getElementById('themeToggle');
       if (!btn) return;
       btn.addEventListener('click', function() {
-        var current = document.documentElement.getAttribute('data-theme');
-        var next = current === 'dark' ? 'light' : 'dark';
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('theme', next);
       });
     })();
 
-    // Translation dropdown
+    // ── Translation ────────────────────────────────────────────
     (function() {
       var toggleBtn  = document.getElementById('translateBtn');
       var dropdown   = document.getElementById('translateDropdown');
@@ -53,18 +52,88 @@
       var wrap       = document.getElementById('translateWrap');
       if (!toggleBtn || !dropdown) return;
 
+      // MyMemory language codes
+      var mmLang = {
+        'zh-CN': 'zh-CN', 'fr': 'fr', 'ja': 'ja', 'ko': 'ko',
+        'de':    'de',     'es': 'es', 'pt': 'pt', 'ar': 'ar'
+      };
+
+      // ── MyMemory in-page translation (free, no key, global) ──
+      var originalHTML  = null;
+      var translating   = false;
+
+      function mmFetch(text, lang) {
+        var pair = 'en%7C' + (mmLang[lang] || lang);
+        return fetch('https://api.mymemory.translated.world/get?q='
+            + encodeURIComponent(text.slice(0, 480)) + '&langpair=' + pair)
+          .then(function(r) { return r.json(); })
+          .then(function(d) { return d.responseStatus === 200 ? d.responseData.translatedText : text; })
+          .catch(function() { return text; });
+      }
+
+      function translateInPage(lang) {
+        if (translating) return;
+        var content = document.querySelector('.post-content');
+        if (!content) return;
+
+        // Save original once
+        if (!originalHTML) originalHTML = content.innerHTML;
+
+        // Check cache
+        var key = 'tr_' + lang + '_' + location.pathname;
+        var cached = sessionStorage.getItem(key);
+        if (cached) { content.innerHTML = cached; return; }
+
+        // Collect text elements, skip code/math
+        var els = Array.prototype.slice.call(
+          content.querySelectorAll('p, h2, h3, h4, li, blockquote p, td, th')
+        ).filter(function(el) {
+          return !el.closest('pre') && !el.closest('.MathJax')
+              && !el.closest('[class*="highlight"]') && el.textContent.trim().length > 3;
+        });
+
+        translating = true;
+        toggleBtn.disabled = true;
+        toggleBtn.style.opacity = '0.5';
+
+        var i = 0;
+        function next() {
+          if (i >= els.length) {
+            sessionStorage.setItem(key, content.innerHTML);
+            translating = false;
+            toggleBtn.disabled = false;
+            toggleBtn.style.opacity = '';
+            return;
+          }
+          var el = els[i++];
+          var orig = el.textContent.trim();
+          mmFetch(orig, lang).then(function(translated) {
+            if (translated && translated !== orig) el.textContent = translated;
+            next();
+          });
+        }
+        next();
+      }
+
+      // ── Apply translation ────────────────────────────────────
       function applyTranslation(lang) {
         if (lang === 'en') {
-          // Clear Google Translate cookies then reload to restore original
-          ['', window.location.hostname, '.' + window.location.hostname].forEach(function(domain) {
-            var d = domain ? '; domain=' + domain : '';
-            document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/' + d;
+          // Restore MyMemory translation if active
+          var content = document.querySelector('.post-content');
+          if (content && originalHTML) {
+            content.innerHTML = originalHTML;
+            originalHTML = null;
+            return;
+          }
+          // Otherwise clear Google Translate cookies and reload
+          ['', location.hostname, '.' + location.hostname].forEach(function(d) {
+            document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/' + (d ? '; domain=' + d : '');
           });
-          window.location.reload();
+          location.reload();
           return;
         }
 
-        // Try Google Translate widget first (check at click time)
+        // Try Google Translate widget (available outside China)
         var select = document.querySelector('#google_translate_element select');
         if (select) {
           select.value = lang;
@@ -72,27 +141,17 @@
           return;
         }
 
-        // Google not available — navigate to fallback translation service
-        var pageUrl = encodeURIComponent(window.location.href);
-        if (lang === 'zh-CN') {
-          // Baidu Fanyi for Chinese (accessible in China)
-          window.location.href = 'https://fanyi.baidu.com/transpage?query='
-            + pageUrl + '&from=en&to=zh&source=url&render=1';
-        } else {
-          // Google Translate framed URL for other languages
-          window.location.href = 'https://translate.google.com/translate?sl=en&tl='
-            + lang + '&u=' + pageUrl;
-        }
+        // Fallback: MyMemory in-page translation (works in China)
+        translateInPage(lang);
       }
 
-      // Toggle dropdown
+      // ── Dropdown UI ──────────────────────────────────────────
       toggleBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         var open = dropdown.classList.toggle('open');
         toggleBtn.setAttribute('aria-expanded', open);
       });
 
-      // Close on outside click
       document.addEventListener('click', function(e) {
         if (!wrap.contains(e.target)) {
           dropdown.classList.remove('open');
@@ -100,19 +159,13 @@
         }
       });
 
-      // Option click
       dropdown.querySelectorAll('.translate-option').forEach(function(opt) {
         opt.addEventListener('click', function() {
           var lang  = opt.getAttribute('data-lang');
           var label = opt.getAttribute('data-label');
-
-          // Update active state
-          dropdown.querySelectorAll('.translate-option').forEach(function(o) {
-            o.classList.remove('active');
-          });
+          dropdown.querySelectorAll('.translate-option').forEach(function(o) { o.classList.remove('active'); });
           opt.classList.add('active');
           currentLbl.textContent = label;
-
           dropdown.classList.remove('open');
           toggleBtn.setAttribute('aria-expanded', 'false');
           applyTranslation(lang);
@@ -120,11 +173,11 @@
       });
     })();
 
-    // Code block enhancements: language label + copy button
+    // ── Code block: language label + copy button ───────────────
     (function() {
       document.querySelectorAll('.post-content pre').forEach(function(pre) {
         var code = pre.querySelector('code');
-        var langClass = code ? [...code.classList].find(function(c) { return c.startsWith('language-'); }) : null;
+        var langClass = code ? Array.prototype.slice.call(code.classList).find(function(c) { return c.startsWith('language-'); }) : null;
         var lang = langClass ? langClass.replace('language-', '') : '';
 
         var wrapper = document.createElement('div');
@@ -146,14 +199,10 @@
           copyBtn.textContent = 'Copy';
           wrapper.appendChild(copyBtn);
           copyBtn.addEventListener('click', function() {
-            var text = code ? code.innerText : pre.innerText;
-            navigator.clipboard.writeText(text).then(function() {
+            navigator.clipboard.writeText(code ? code.innerText : pre.innerText).then(function() {
               copyBtn.textContent = 'Copied!';
               copyBtn.classList.add('copied');
-              setTimeout(function() {
-                copyBtn.textContent = 'Copy';
-                copyBtn.classList.remove('copied');
-              }, 2000);
+              setTimeout(function() { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 2000);
             });
           });
         }

@@ -20,7 +20,7 @@
 
   {% include footer.html %}
 
-  <!-- Google Translate Widget (works outside China) -->
+  <!-- Google Translate only -->
   <script>
     function googleTranslateElementInit() {
       new google.translate.TranslateElement({
@@ -31,10 +31,6 @@
     }
   </script>
   <script async src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-  <!--
-    Baidu 整页翻译 Widget：曾用的 CDN 脚本实测不可用（404/403，且官方仅推广浏览器插件+手动输入网址，
-    无稳定免费的第三方站点嵌入方案）。国内用户在 Google 被屏蔽时由下方 MyMemory 接口兜底。
-  -->
 
   <script>
     // ── Dark mode ──────────────────────────────────────────────
@@ -48,7 +44,7 @@
       });
     })();
 
-    // ── Translation ────────────────────────────────────────────
+    // ── Translation (Google only) ────────────────────────────
     (function() {
       var toggleBtn  = document.getElementById('translateBtn');
       var dropdown   = document.getElementById('translateDropdown');
@@ -56,80 +52,52 @@
       var wrap       = document.getElementById('translateWrap');
       if (!toggleBtn || !dropdown) return;
 
-      // MyMemory language codes
-      var mmLang = {
-        'zh-CN': 'zh-CN', 'fr': 'fr', 'ja': 'ja', 'ko': 'ko',
-        'de':    'de',     'es': 'es', 'pt': 'pt', 'ar': 'ar'
-      };
-
-      // ── MyMemory in-page translation (free, no key, global) ──
-      var originalHTML  = null;
-      var translating   = false;
-
-      function mmFetch(text, lang) {
-        var pair = 'en%7C' + (mmLang[lang] || lang);
-        return fetch('https://api.mymemory.translated.world/get?q='
-            + encodeURIComponent(text.slice(0, 480)) + '&langpair=' + pair)
-          .then(function(r) { return r.json(); })
-          .then(function(d) { return d.responseStatus === 200 ? d.responseData.translatedText : text; })
-          .catch(function() { return text; });
+      function getGoogleSelect() {
+        return document.querySelector('#google_translate_element select');
       }
 
-      function translateInPage(lang) {
-        if (translating) return;
-        var content = document.querySelector('.post-content');
-        if (!content) return;
-
-        // Save original once
-        if (!originalHTML) originalHTML = content.innerHTML;
-
-        // Check cache
-        var key = 'tr_' + lang + '_' + location.pathname;
-        var cached = sessionStorage.getItem(key);
-        if (cached) { content.innerHTML = cached; return; }
-
-        // Collect text elements, skip code/math
-        var els = Array.prototype.slice.call(
-          content.querySelectorAll('p, h2, h3, h4, li, blockquote p, td, th')
-        ).filter(function(el) {
-          return !el.closest('pre') && !el.closest('.MathJax')
-              && !el.closest('[class*="highlight"]') && el.textContent.trim().length > 3;
-        });
-
-        translating = true;
-        toggleBtn.disabled = true;
-        toggleBtn.style.opacity = '0.5';
-
-        var i = 0;
-        function next() {
-          if (i >= els.length) {
-            sessionStorage.setItem(key, content.innerHTML);
-            translating = false;
-            toggleBtn.disabled = false;
-            toggleBtn.style.opacity = '';
-            return;
-          }
-          var el = els[i++];
-          var orig = el.textContent.trim();
-          mmFetch(orig, lang).then(function(translated) {
-            if (translated && translated !== orig) el.textContent = translated;
-            next();
-          });
+      function showGoogleUnavailableTip() {
+        if (document.getElementById('translateBlockedOverlay')) return;
+        var overlay = document.createElement('div');
+        overlay.id = 'translateBlockedOverlay';
+        overlay.className = 'translate-blocked-overlay';
+        overlay.setAttribute('role', 'dialog');
+        overlay.innerHTML =
+          '<div class="translate-blocked-card">' +
+          '<h3>无法使用 Google 翻译</h3>' +
+          '<p>当前页面无法加载 Google 翻译服务。若您位于<strong>中国大陆</strong>等无法访问 Google 的地区，会出现此情况。</p>' +
+          '<p>您可以尝试：</p>' +
+          '<ul>' +
+          '<li>使用 <strong>Microsoft Edge</strong> 浏览器，在页面空白处右键 →「翻译为中文（简体）」</li>' +
+          '<li>安装浏览器翻译扩展，例如 <strong>沉浸式翻译</strong>、<strong>沙拉查词</strong> 等</li>' +
+          '<li>使用手机自带浏览器或国际版浏览器的全文翻译功能</li>' +
+          '</ul>' +
+          '<button type="button" class="translate-blocked-close">知道了</button>' +
+          '</div>';
+        document.body.appendChild(overlay);
+        function close() {
+          overlay.remove();
+          document.removeEventListener('keydown', onKey);
         }
-        next();
+        function onKey(e) {
+          if (e.key === 'Escape') close();
+        }
+        document.addEventListener('keydown', onKey);
+        overlay.addEventListener('click', function(e) {
+          if (e.target === overlay) close();
+        });
+        overlay.querySelector('.translate-blocked-close').addEventListener('click', close);
       }
 
-      // ── Apply translation ────────────────────────────────────
+      function resetToEnglishUI() {
+        dropdown.querySelectorAll('.translate-option').forEach(function(o) {
+          o.classList.toggle('active', o.getAttribute('data-lang') === 'en');
+        });
+        currentLbl.textContent = 'EN';
+      }
+
       function applyTranslation(lang) {
         if (lang === 'en') {
-          // Restore MyMemory translation if active
-          var content = document.querySelector('.post-content');
-          if (content && originalHTML) {
-            content.innerHTML = originalHTML;
-            originalHTML = null;
-            return;
-          }
-          // Clear Google Translate cookies and reload to restore original
           ['', location.hostname, '.' + location.hostname].forEach(function(d) {
             document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/' + (d ? '; domain=' + d : '');
           });
@@ -137,19 +105,31 @@
           return;
         }
 
-        // Google Translate widget (blocked in mainland China → select missing)
-        var gSelect = document.querySelector('#google_translate_element select');
-        if (gSelect) {
-          gSelect.value = lang;
-          gSelect.dispatchEvent(new Event('change'));
-          return;
+        function tryGoogle() {
+          var sel = getGoogleSelect();
+          if (!sel) return false;
+          sel.value = lang;
+          sel.dispatchEvent(new Event('change'));
+          return true;
         }
 
-        // MyMemory API: in-page translation, works without Google/Baidu
-        translateInPage(lang);
+        if (tryGoogle()) return;
+
+        var n = 0;
+        var t = setInterval(function() {
+          n++;
+          if (tryGoogle()) {
+            clearInterval(t);
+            return;
+          }
+          if (n >= 25) {
+            clearInterval(t);
+            resetToEnglishUI();
+            showGoogleUnavailableTip();
+          }
+        }, 200);
       }
 
-      // ── Dropdown UI ──────────────────────────────────────────
       toggleBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         var open = dropdown.classList.toggle('open');

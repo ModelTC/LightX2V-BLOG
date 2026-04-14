@@ -78,11 +78,10 @@
 
       function applyTranslation(lang) {
         if (lang === 'en') {
-          // Reset: reload original page (strip any translate.goog domain)
-          var url = window.location.href;
-          if (url.indexOf('.translate.goog') !== -1) {
-            url = url.replace(/^https?:\/\/[^/]*\.translate\.goog/, 'https://' + window.location.hostname.replace(/-/g, '.').replace('.translate.goog', ''));
-          }
+          // Clear Google Translate cookies and reload to restore original
+          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=' + window.location.hostname + '; path=/';
+          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=.' + window.location.hostname + '; path=/';
           window.location.reload();
           return;
         }

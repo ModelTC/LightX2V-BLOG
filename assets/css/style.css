@@ -117,6 +117,7 @@ img {
   display: flex;
   align-items: center;
   gap: var(--spacing-lg);
+  margin-left: var(--spacing-2xl);
 }
 
 .site-nav a {

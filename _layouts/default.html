@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <!-- Prevent dark mode flash: apply theme before CSS renders -->
+  <script>
+    (function() {
+      var saved = localStorage.getItem('theme');
+      var preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', saved || preferred);
+    })();
+  </script>
   {% include head.html %}
 </head>
 <body>
@@ -11,5 +19,59 @@
   </main>
 
   {% include footer.html %}
+
+  <script>
+    // Dark mode toggle
+    (function() {
+      var btn = document.getElementById('themeToggle');
+      if (!btn) return;
+      btn.addEventListener('click', function() {
+        var current = document.documentElement.getAttribute('data-theme');
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+      });
+    })();
+
+    // Code block enhancements: language label + copy button
+    (function() {
+      document.querySelectorAll('.post-content pre').forEach(function(pre) {
+        var code = pre.querySelector('code');
+        var langClass = code ? [...code.classList].find(function(c) { return c.startsWith('language-'); }) : null;
+        var lang = langClass ? langClass.replace('language-', '') : '';
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'code-block-wrapper';
+        if (lang) wrapper.setAttribute('data-lang', lang);
+        pre.parentNode.insertBefore(wrapper, pre);
+        wrapper.appendChild(pre);
+
+        if (lang && lang !== 'plaintext') {
+          var label = document.createElement('span');
+          label.className = 'code-lang';
+          label.textContent = lang;
+          wrapper.appendChild(label);
+        }
+
+        if (navigator.clipboard) {
+          var copyBtn = document.createElement('button');
+          copyBtn.className = 'code-copy';
+          copyBtn.textContent = 'Copy';
+          wrapper.appendChild(copyBtn);
+          copyBtn.addEventListener('click', function() {
+            var text = code ? code.innerText : pre.innerText;
+            navigator.clipboard.writeText(text).then(function() {
+              copyBtn.textContent = 'Copied!';
+              copyBtn.classList.add('copied');
+              setTimeout(function() {
+                copyBtn.textContent = 'Copy';
+                copyBtn.classList.remove('copied');
+              }, 2000);
+            });
+          });
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

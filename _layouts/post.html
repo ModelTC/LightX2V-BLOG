@@ -1,0 +1,60 @@
+---
+layout: default
+---
+
+<div class="container">
+  <article class="post">
+
+    <header class="post-header">
+      <div class="post-meta">
+        <time datetime="{{ page.date | date_to_xmlschema }}">
+          {{ page.date | date: "%Y年%m月%d日" }}
+        </time>
+        {% if page.author %}
+          <span class="sep">·</span>
+          <span>{{ page.author }}</span>
+        {% endif %}
+        {% assign words = content | number_of_words %}
+        <span class="sep">·</span>
+        <span>约 {{ words | divided_by: 200 | plus: 1 }} 分钟读完</span>
+      </div>
+      <h1 class="post-heading">{{ page.title }}</h1>
+      {% if page.excerpt and page.show_excerpt != false %}
+      <p class="post-subtitle">{{ page.subtitle }}</p>
+      {% endif %}
+      {% if page.tags.size > 0 %}
+      <div class="post-tags">
+        {% for tag in page.tags %}
+        <span class="tag">{{ tag }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </header>
+
+    <div class="post-content">
+      {{ content }}
+    </div>
+
+    <footer class="post-footer">
+      <div class="post-nav">
+        {% if page.previous.url %}
+        <a class="post-nav__prev" href="{{ page.previous.url | relative_url }}">
+          <span class="nav-label">← 上一篇</span>
+          <span class="nav-title">{{ page.previous.title }}</span>
+        </a>
+        {% endif %}
+        {% if page.next.url %}
+        <a class="post-nav__next" href="{{ page.next.url | relative_url }}">
+          <span class="nav-label">下一篇 →</span>
+          <span class="nav-title">{{ page.next.title }}</span>
+        </a>
+        {% endif %}
+      </div>
+
+      <div class="back-home">
+        <a href="{{ '/' | relative_url }}">← 返回首页</a>
+      </div>
+    </footer>
+
+  </article>
+</div>

@@ -43,14 +43,14 @@
 
 /* Dark mode */
 [data-theme="dark"] {
-  --color-bg: #0f1117;
-  --color-text: #e2e8f0;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
-  --color-border: #2d3748;
-  --color-border-light: #1e2533;
-  --color-accent: #e2e8f0;
-  --color-accent-hover: #cbd5e1;
+  --color-bg: #16181d;
+  --color-text: #c9d1d9;
+  --color-text-secondary: #8b949e;
+  --color-text-muted: #6e7681;
+  --color-border: #30363d;
+  --color-border-light: #21262d;
+  --color-accent: #c9d1d9;
+  --color-accent-hover: #b1bac4;
   --color-tag-bg: #1e2533;
   --color-tag-text: #94a3b8;
   --color-code-bg: #1e2533;

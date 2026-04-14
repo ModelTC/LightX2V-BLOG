@@ -11,7 +11,7 @@ layout: default
           {{ page.date | date: "%Y-%m-%d" }}
         </time>
         <span class="sep">·</span>
-        <span>{{ site.author.name }}</span>
+        <span>{% if page.author %}{{ page.author }}{% else %}{{ site.author.name }}{% endif %}</span>
       </div>
 
       <h1 class="post-heading">{{ page.title }}</h1>

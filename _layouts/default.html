@@ -53,49 +53,36 @@
       var wrap       = document.getElementById('translateWrap');
       if (!toggleBtn || !dropdown) return;
 
-      // Detect if Google Translate widget loaded (fails when blocked)
-      var googleReady = false;
-      var gtCheckTimer = setInterval(function() {
-        if (document.querySelector('#google_translate_element select')) {
-          googleReady = true;
-          clearInterval(gtCheckTimer);
-        }
-      }, 200);
-      setTimeout(function() { clearInterval(gtCheckTimer); }, 5000);
-
-      // Fallback URLs for when Google is blocked
-      var baiduLangs = { 'zh-CN': 'zh' };
-      var fallbackUrl = function(lang) {
-        var pageUrl = encodeURIComponent(window.location.href);
-        if (baiduLangs[lang]) {
-          // Use Baidu for Chinese
-          return 'https://fanyi.baidu.com/transpage?source=url&ie=utf8&from=auto&to='
-                 + baiduLangs[lang] + '&render=1&url=' + pageUrl;
-        }
-        // Use Google Translate framed URL for others
-        return 'https://translate.google.com/translate?sl=auto&tl=' + lang + '&u=' + pageUrl;
-      };
-
       function applyTranslation(lang) {
         if (lang === 'en') {
-          // Clear Google Translate cookies and reload to restore original
-          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
-          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=' + window.location.hostname + '; path=/';
-          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=.' + window.location.hostname + '; path=/';
+          // Clear Google Translate cookies then reload to restore original
+          ['', window.location.hostname, '.' + window.location.hostname].forEach(function(domain) {
+            var d = domain ? '; domain=' + domain : '';
+            document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/' + d;
+          });
           window.location.reload();
           return;
         }
 
-        if (googleReady) {
-          var select = document.querySelector('#google_translate_element select');
-          if (select) {
-            select.value = lang;
-            select.dispatchEvent(new Event('change'));
-            return;
-          }
+        // Try Google Translate widget first (check at click time)
+        var select = document.querySelector('#google_translate_element select');
+        if (select) {
+          select.value = lang;
+          select.dispatchEvent(new Event('change'));
+          return;
         }
-        // Google not available — open fallback in new tab
-        window.open(fallbackUrl(lang), '_blank');
+
+        // Google not available — navigate to fallback translation service
+        var pageUrl = encodeURIComponent(window.location.href);
+        if (lang === 'zh-CN') {
+          // Baidu Fanyi for Chinese (accessible in China)
+          window.location.href = 'https://fanyi.baidu.com/transpage?query='
+            + pageUrl + '&from=en&to=zh&source=url&render=1';
+        } else {
+          // Google Translate framed URL for other languages
+          window.location.href = 'https://translate.google.com/translate?sl=en&tl='
+            + lang + '&u=' + pageUrl;
+        }
       }
 
       // Toggle dropdown

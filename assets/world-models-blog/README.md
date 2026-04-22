@@ -17,4 +17,10 @@ This directory should contain the following media files for the world models blo
 - Videos should be MP4 format, optimized for web playback
 - All files referenced in the blog post markdown file: `_articles/World-Models-Blog.md`
 
+## Git LFS Usage:
+- This repository is configured with Git LFS for managing large media files
+- All image and video files will automatically be tracked by LFS
+- When adding new media files, simply use `git add` as normal - LFS handling is automatic
+- Files tracked by LFS: *.png, *.jpg, *.jpeg, *.gif, *.svg, *.mp4, *.mov, *.avi, *.webm
+
 Please add these actual media files to complete the blog post setup.

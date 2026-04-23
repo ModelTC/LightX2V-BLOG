@@ -6,7 +6,7 @@ This directory should contain the following media files for the world models blo
 
 ### Images:
 - **matrix-game-3.0.png** - Performance comparison chart between LightX2V implementation and Matrix-Game official (from PR #989)
-- **HY-World-Mirror.png** - Performance acceleration comparison between LightX2V implementation and baseline (from PR #1018/#1022)
+- **HY-World-Mirror.png** - Performance acceleration comparison between LightX2V implementation and baseline (from PR #1022)
 
 ### Videos:
 - **matrix-game.mp4** - Matrix Game 3.0 real-time interactive generation demo video

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "LightX2V Expands World Model Capabilities with Matrix Game 3.0 and HY-WorldMirror 2.0"
-author: "LightX2V Team"
+author: "LightX2V Team, Longzan Luo, Shunzi Yang"
 date: 2026-04-23
 tags: [World Models, Matrix Game, HY-WorldMirror, Real-time Generation, 3D Reconstruction]
 ---
@@ -45,7 +45,7 @@ The model creates navigable 3D worlds through a 4-stage pipeline from panorama g
 </video>
 *HY-WorldMirror 2.0 3D world reconstruction demo*
 
-Our integration ([PR #1018](https://github.com/ModelTC/LightX2V/pull/1018), [PR #1022](https://github.com/ModelTC/LightX2V/pull/1022)) delivers significant performance acceleration with multi-GPU scaling through sequence-parallel inference for large scenes, advanced FP8 quantization support with real-time calibration, Intel XPU acceleration through SYCL/ESIMD kernels, and memory optimization via CPU offloading and lazy loading for efficient inference.
+Our integration [PR #1022](https://github.com/ModelTC/LightX2V/pull/1022)) delivers significant performance acceleration with multi-GPU scaling through sequence-parallel inference for large scenes, advanced FP8 quantization support with real-time calibration, Intel XPU acceleration through SYCL/ESIMD kernels, and memory optimization via CPU offloading and lazy loading for efficient inference.
 
 ## Getting Started
 

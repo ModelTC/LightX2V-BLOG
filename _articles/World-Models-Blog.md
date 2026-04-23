@@ -16,11 +16,11 @@ We're excited to announce that LightX2V is expanding from video generation model
 
 Our integration ([PR #989](https://github.com/ModelTC/LightX2V/pull/989)) delivers significant performance improvements over the official implementation:
 
-![Matrix Game 3.0 Performance](/assets/world-models-blog/matrix-game-3.0.png)
+![Matrix Game 3.0 Performance]({{ site.baseurl }}/assets/world-models-blog/matrix-game-3.0.png)
 *Performance comparison between LightX2V implementation and Matrix-Game official*
 
 <video controls width="100%">
-  <source src="/assets/world-models-blog/matrix-game.mp4" type="video/mp4">
+  <source src="{{ site.baseurl }}/assets/world-models-blog/matrix-game.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 *Matrix Game 3.0 real-time interactive generation demo*
@@ -36,11 +36,11 @@ Key integration benefits:
 
 The model creates navigable 3D worlds through a 4-stage pipeline from panorama generation to final 3D scene composition for world generation, while its reconstruction capability predicts depth, surface normals, camera parameters, 3D point clouds, and 3DGS attributes in a single forward pass. It achieves state-of-the-art results with 0.012 accuracy and 0.016 completeness on the 7-Scenes dataset, along with 35% improvement in rotation accuracy compared to version 1.0.
 
-![HY-WorldMirror Performance](/assets/world-models-blog/HY-World-Mirror.png)
+![HY-WorldMirror Performance]({{ site.baseurl }}/assets/world-models-blog/HY-World-Mirror.png)
 *Performance acceleration comparison between LightX2V implementation and baseline*
 
 <video controls width="100%">
-  <source src="/assets/world-models-blog/HY-World-Mirror-2.0.mp4" type="video/mp4">
+  <source src="{{ site.baseurl }}/assets/world-models-blog/HY-World-Mirror-2.0.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 *HY-WorldMirror 2.0 3D world reconstruction demo*

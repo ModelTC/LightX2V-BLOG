@@ -1,47 +1,39 @@
-# My Blog
+# LightX2V Blog
 
-基于 Jekyll 构建的个人博客，托管在 GitHub Pages，完全免费。
+LightX2V Repository: https://github.com/ModelTC/LightX2V
 
-## 本地运行
+Blog URL: http://light-ai.top/LightX2V-BLOG/
 
-```bash
-# 安装依赖
-bundle install
+## How to Add a New Blog Post
 
-# 启动开发服务器（支持热更新）
-bundle exec jekyll serve --livereload
+Create a markdown file in the `_articles` folder with your content.
 
-# 浏览器访问
-open http://localhost:4000
-```
+## ⚠️ Blog Format Requirements
 
-## 写新文章
+### Front Matter (Required)
 
-在 `_posts/` 目录下创建 Markdown 文件，文件名格式：
+Every article must include YAML front matter at the beginning with the following format:
 
-```
-YYYY-MM-DD-your-post-title.md
-```
-
-文章头部必须包含 Front Matter：
-
-```markdown
+```yaml
 ---
 layout: post
-title: "文章标题"
-date: 2026-04-14
-tags: [标签1, 标签2]
+title: "Article Title"
+author: "Author Name"
+date: YYYY-MM-DD
+tags: [tag1, tag2, ...]
 ---
-
-文章正文从这里开始...
 ```
 
-## 部署
+**Field Descriptions:**
 
-推送到 `main` 分支，GitHub Actions 会自动构建并部署到 GitHub Pages。
+| Field | Required | Description |
+|-------|----------|-------------|
+| layout | ✓ | Must be `post` |
+| title | ✓ | Article title, wrapped in quotes |
+| author | ✓ | Author name |
+| date | ✓ | Publication date in format: YYYY-MM-DD |
+| tags | ✓ | List of tags separated by commas in brackets |
 
-## 自定义
+## Deployment
 
-- 修改 `_config.yml` 中的博客标题、描述、作者信息
-- 修改 `assets/css/style.css` 调整样式
-- 修改 `about.md` 填写关于页面
+The project uses GitHub Pages for automatic deployment. After committing to the main branch, the content will be automatically built and published to: http://light-ai.top/LightX2V-BLOG/

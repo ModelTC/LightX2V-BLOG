@@ -297,30 +297,31 @@ Even on A100 / H100 / H200, KV Cache management remains useful. It can:
 
 The following tables are reserved for Lingbot World Fast measurements. The recommended setup is to keep the same input conditions, such as resolution, frame count, prompt, seed, GPU, and inference configuration, then record VRAM, latency, and generated video for each strategy. This makes it easier to compare the benefits and costs of different KV Cache strategies.
 
-### Baseline Comparison
 
-| Method | KV Quant | KV Offload | Weight Offload | Peak VRAM | Total Time | Avg Iter Time | Video / Result |
-|---|---|---|---|---:|---:|---:|---|
-| Original Lingbot implementation | - | - | - |  |  |  |  |
-| LightX2V | - | - | - |  |  |  |  |
+### Baseline and Optimization Comparison on a Single H200
 
-### KV Quantization Comparison
+The first comparison uses a single H200 GPU. It shows the difference between the original Lingbot implementation and LightX2V under the same generation setting, and then compares KV quantization and KV offload. The 161-frame case is especially useful for showing how KV Cache optimization changes the memory/speed trade-off.
 
-| Method | KV Quant | KV Offload | Weight Offload | Peak VRAM | Total Time | Avg Iter Time | Video / Result |
-|---|---|---|---|---:|---:|---:|---|
-| LightX2V + SageQuant | SageQuant | - | - |  |  |  |  |
-| LightX2V + KIVI | KIVI | - | - |  |  |  |  |
-| LightX2V + TurboQuant | TurboQuant | - | - |  |  |  |  |
+| Method | Frames | KV Quant (int4) | KV Offload | Peak VRAM | Inference Time | Video / Result |
+|---|---:|---|---|---:|---:|---|
+| Original | 81 | - | - | ~100G | ~92s | <video src="https://github.com/user-attachments/assets/dd774030-9696-4464-a458-0762edc43f27" width="200px"></video>|
+| LightX2V | 81 | - | - | ~100G | ~56s | <video src="https://github.com/user-attachments/assets/1ada7b44-28e5-4fda-9dc8-310a03d803ab" width="200px"></video>|
+| Original | 161 | - | - | OOM | - | - |
+| LightX2V | 161 | - | - | ~100G | ~110s  |<video src="https://github.com/user-attachments/assets/e4bac46a-3fef-4165-9c22-e2b2466b147b" width="200px"></video>|
+| LightX2V | 161 | Enabled | - | ~70G | ~151s |<video src="https://github.com/user-attachments/assets/b38edff3-3912-4ee7-989b-e93f91e68e1e" width="200px"></video>|
+| LightX2V | 161 | Enabled | Enabled | ~54G  | ~255s |<video src="https://github.com/user-attachments/assets/e669b938-1879-47b0-8da7-3e0d2d90b972" width="200px"></video>|
 
-### Offload Combination Comparison
+### Long-Video Generation on a Consumer GPU
 
-| Method | KV Quant | KV Offload | Weight Offload | Peak VRAM | Total Time | Avg Iter Time | Video / Result |
-|---|---|---|---|---:|---:|---:|---|
-| LightX2V + KV Offload | - | Enabled | - |  |  |  |  |
-| LightX2V + KV Offload + Weight Offload | - | Enabled | Enabled |  |  |  |  |
-| LightX2V + SageQuant + KV Offload + Weight Offload | SageQuant | Enabled | Enabled |  |  |  |  |
+The second comparison highlights one of the most practical goals of KV Cache optimization: generating a one-minute video on a consumer GPU. In this RTX 5090 case, the original Lingbot implementation cannot fit in memory, while LightX2V can run the one-minute generation on a single consumer GPU by combining KV quantization, KV offload, and weight offload.
 
----
+| Method | Frames | KV Quant (int4) | KV Offload | Weight Offload | Peak VRAM | Inference Time | Video / Result |
+|---|---:|---|---|---|---:|---:|---|
+| Original | 961 | - | - | - | OOM | - | - |
+| LightX2V | 961  | Enabled | Enabled | Enabled |  |  |  |
+
+
+
 
 ## Conclusion
 
@@ -334,4 +335,12 @@ From an engineering perspective, LightX2V provides three layers of abstraction:
 2. **Rolling / Local Attention** controls the history window and prevents KV from growing without bound;
 3. **KV Quantization + KV Offload** reduce KV Cache VRAM usage, while double buffering and asynchronous streams reduce transfer overhead as much as possible.
 
+The Lingbot World Fast measurements show the same pattern in practice. On H200, LightX2V improves the baseline inference time, while KV Cache optimization can significantly reduce peak VRAM at the cost of extra transfer or quantization overhead. On RTX 5090, combining KV quantization, KV offload, and weight offload turns a one-minute generation case from OOM into a runnable single-GPU workload.
+
 As autoregressive video generation and real-time world models continue to evolve, KV Cache will become an increasingly important part of inference systems. For consumer GPUs, weight offload addresses static weight memory pressure, while KV Cache management addresses dynamic historical-state memory pressure. Combining the two is what makes larger long-sequence video models practical on local devices.
+
+
+https://github.com/user-attachments/assets/67efded8-65d5-4d0b-9a64-71c369e96e9c
+
+
+

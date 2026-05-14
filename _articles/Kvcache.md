@@ -27,6 +27,7 @@ This article explains:
 - [Three KV Cache Strategies](#three-kv-cache-strategies)
 - [KV Quantization Backends](#kv-quantization-backends)
 - [KV Offload Execution Timeline](#kv-offload-execution-timeline)
+- [How to Enable KV Cache Strategies in Config](#how-to-enable-kv-cache-strategies-in-config)
 - [Recommended Usage Strategies](#recommended-usage-strategies)
 - [Conclusion](#conclusion)
 
@@ -249,6 +250,108 @@ Offload needs a clear synchronization relationship between load, compute, and wr
 
 ---
 
+## How to Enable KV Cache Strategies in Config
+
+In LightX2V, KV Cache settings are placed under `ar_config`, because they belong to the autoregressive inference path rather than the static model weights. Weight offload settings stay at the top level of the config, because they control where model weights are stored and when they are moved to GPU.
+
+### Enable KV Quantization
+
+KV quantization is configured through `ar_config.kv_quant`. For example, KIVI int4 KV Cache can be enabled as:
+
+```json
+{
+  "ar_config": {
+    "local_attn_size": 21,
+    "num_frame_per_chunk": 3,
+    "sink_size": 3,
+    "kv_quant": {
+      "quant_scheme": "kivi",
+      "k_cache_type": "int4",
+      "v_cache_type": "int4",
+      "group_size": 64
+    },
+    "kv_offload": false
+  }
+}
+```
+
+For SageQuant, the attention backend should also use the SageAttention path that directly consumes quantized KV:
+
+```json
+{
+  "self_attn_1_type": "sage_attn2_k_int8_v_fp8",
+  "ar_config": {
+    "kv_quant": {
+      "calibrate": false,
+      "calib_path": "/path/to/calib_kv.pt",
+      "quant_scheme": "sage",
+      "k_cache_type": "int8",
+      "v_cache_type": "fp8"
+    },
+    "kv_offload": false
+  }
+}
+```
+
+### Enable KV Offload
+
+KV offload is controlled by `ar_config.kv_offload`. It can be used without weight offload, which means model weights remain managed by the normal path, while part of the dynamic KV Cache is moved through the KV offload path.
+
+```json
+{
+  "cpu_offload": false,
+  "ar_config": {
+    "local_attn_size": 21,
+    "num_frame_per_chunk": 3,
+    "sink_size": 3,
+    "kv_offload": true
+  }
+}
+```
+
+KV offload can also be combined with KV quantization:
+
+```json
+{
+  "cpu_offload": false,
+  "ar_config": {
+    "kv_quant": {
+      "quant_scheme": "kivi",
+      "k_cache_type": "int4",
+      "v_cache_type": "int4",
+      "group_size": 64
+    },
+    "kv_offload": true
+  }
+}
+```
+
+### Enable KV Offload + Weight Offload
+
+When GPU memory is more constrained, KV offload can be combined with weight offload. In this case, `ar_config.kv_offload` controls KV Cache movement, while top-level `cpu_offload` and `offload_granularity` control model weight movement.
+
+```json
+{
+  "cpu_offload": true,
+  "offload_granularity": "block",
+  "t5_cpu_offload": true,
+  "vae_cpu_offload": true,
+  "ar_config": {
+    "kv_quant": {
+      "quant_scheme": "kivi",
+      "k_cache_type": "int4",
+      "v_cache_type": "int4",
+      "group_size": 64
+    },
+    "kv_offload": true
+  }
+}
+```
+
+This combination targets two different memory sources at the same time: weight offload reduces static model-weight residency on GPU, while KV offload reduces the dynamic historical-state residency created during autoregressive generation.
+
+---
+
 ## Recommended Usage Strategies
 
 KV Cache strategies can be selected based on GPU memory and model size.
@@ -338,9 +441,4 @@ From an engineering perspective, LightX2V provides three layers of abstraction:
 The Lingbot World Fast measurements show the same pattern in practice. On H200, LightX2V improves the baseline inference time, while KV Cache optimization can significantly reduce peak VRAM at the cost of extra transfer or quantization overhead. On RTX 5090, combining KV quantization, KV offload, and weight offload turns a one-minute generation case from OOM into a runnable single-GPU workload.
 
 As autoregressive video generation and real-time world models continue to evolve, KV Cache will become an increasingly important part of inference systems. For consumer GPUs, weight offload addresses static weight memory pressure, while KV Cache management addresses dynamic historical-state memory pressure. Combining the two is what makes larger long-sequence video models practical on local devices.
-
-
-https://github.com/user-attachments/assets/67efded8-65d5-4d0b-9a64-71c369e96e9c
-
-
 

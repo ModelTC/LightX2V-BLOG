@@ -407,12 +407,12 @@ The first comparison uses a single H200 GPU. It shows the difference between the
 
 | Method | Frames | KV Quant (int4) | KV Offload | Peak VRAM | Inference Time | Video / Result |
 |---|---:|---|---|---:|---:|---|
-| Original | 81 | - | - | ~100G | ~92s | <video src="https://github.com/user-attachments/assets/dd774030-9696-4464-a458-0762edc43f27" width="200px"></video>|
-| LightX2V | 81 | - | - | ~100G | ~56s | <video src="https://github.com/user-attachments/assets/1ada7b44-28e5-4fda-9dc8-310a03d803ab" width="200px"></video>|
+| Original | 81 | - | - | ~100G | ~92s | <video controls muted playsinline preload="metadata" width="200"><source src="https://github.com/user-attachments/assets/dd774030-9696-4464-a458-0762edc43f27" type="video/mp4"></video> |
+| LightX2V | 81 | - | - | ~100G | ~56s | <video controls muted playsinline preload="metadata" width="200"><source src="https://github.com/user-attachments/assets/1ada7b44-28e5-4fda-9dc8-310a03d803ab" type="video/mp4"></video> |
 | Original | 161 | - | - | OOM | - | - |
-| LightX2V | 161 | - | - | ~100G | ~110s  |<video src="https://github.com/user-attachments/assets/e4bac46a-3fef-4165-9c22-e2b2466b147b" width="200px"></video>|
-| LightX2V | 161 | Enabled | - | ~70G | ~151s |<video src="https://github.com/user-attachments/assets/b38edff3-3912-4ee7-989b-e93f91e68e1e" width="200px"></video>|
-| LightX2V | 161 | Enabled | Enabled | ~54G  | ~255s |<video src="https://github.com/user-attachments/assets/e669b938-1879-47b0-8da7-3e0d2d90b972" width="200px"></video>|
+| LightX2V | 161 | - | - | ~100G | ~110s | <video controls muted playsinline preload="metadata" width="200"><source src="https://github.com/user-attachments/assets/e4bac46a-3fef-4165-9c22-e2b2466b147b" type="video/mp4"></video> |
+| LightX2V | 161 | Enabled | - | ~70G | ~151s | <video controls muted playsinline preload="metadata" width="200"><source src="https://github.com/user-attachments/assets/b38edff3-3912-4ee7-989b-e93f91e68e1e" type="video/mp4"></video> |
+| LightX2V | 161 | Enabled | Enabled | ~54G | ~255s | <video controls muted playsinline preload="metadata" width="200"><source src="https://github.com/user-attachments/assets/e669b938-1879-47b0-8da7-3e0d2d90b972" type="video/mp4"></video> |
 
 ### Long-Video Generation on a Consumer GPU
 
@@ -421,7 +421,7 @@ The second comparison highlights one of the most practical goals of KV Cache opt
 | Method | Frames | KV Quant (int4) | KV Offload | Weight Offload | Peak VRAM | Inference Time | Video / Result |
 |---|---:|---|---|---|---:|---:|---|
 | Original | 961 | - | - | - | OOM | - | - |
-| LightX2V | 961 | Enabled | Enabled | Enabled | 23G | ～1h |<video src="https://github.com/user-attachments/assets/761c989a-e5ca-4500-87d9-1b5ff72ba82f" width="200px"></video>|
+| LightX2V | 961 | Enabled | Enabled | Enabled | 23G | ~1h | <video controls muted playsinline preload="metadata" width="200"><source src="https://github.com/user-attachments/assets/761c989a-e5ca-4500-87d9-1b5ff72ba82f" type="video/mp4"></video> |
 
 
 

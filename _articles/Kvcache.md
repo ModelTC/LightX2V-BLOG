@@ -400,6 +400,8 @@ Even on A100 / H100 / H200, KV Cache management remains useful. It can:
 
 The following tables are reserved for Lingbot World Fast measurements. The recommended setup is to keep the same input conditions, such as resolution, frame count, prompt, seed, GPU, and inference configuration, then record VRAM, latency, and generated video for each strategy. This makes it easier to compare the benefits and costs of different KV Cache strategies.
 
+Some videos are too large to upload directly, so they were compressed with FFmpeg; this may slightly affect visual clarity.
+
 
 ### Baseline and Optimization Comparison on a Single H200
 

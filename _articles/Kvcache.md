@@ -421,7 +421,7 @@ The second comparison highlights one of the most practical goals of KV Cache opt
 | Method | Frames | KV Quant (int4) | KV Offload | Weight Offload | Peak VRAM | Inference Time | Video / Result |
 |---|---:|---|---|---|---:|---:|---|
 | Original | 961 | - | - | - | OOM | - | - |
-| LightX2V | 961 | Enabled | Enabled | Enabled |  |  |  |
+| LightX2V | 961 | Enabled | Enabled | Enabled | 23G | ～1h |<video src="https://github.com/user-attachments/assets/761c989a-e5ca-4500-87d9-1b5ff72ba82f" width="200px"></video>|
 
 
 

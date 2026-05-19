@@ -192,6 +192,82 @@
         }
       });
     })();
+
+    // ── Image lightbox: click to view full resolution ─────────
+    (function() {
+      var postContent = document.querySelector('.post-content');
+      if (!postContent) return;
+
+      var images = postContent.querySelectorAll('img');
+      if (!images.length) return;
+
+      var lightbox = document.createElement('div');
+      lightbox.className = 'image-lightbox';
+      lightbox.setAttribute('role', 'dialog');
+      lightbox.setAttribute('aria-modal', 'true');
+      lightbox.setAttribute('aria-label', 'Enlarged image');
+      lightbox.innerHTML =
+        '<button type="button" class="image-lightbox__close" aria-label="Close">&times;</button>' +
+        '<div class="image-lightbox__inner">' +
+          '<img class="image-lightbox__img" alt="">' +
+        '</div>' +
+        '<span class="image-lightbox__hint">Click outside or press Esc to close</span>';
+      document.body.appendChild(lightbox);
+
+      var lightboxImg = lightbox.querySelector('.image-lightbox__img');
+      var closeBtn = lightbox.querySelector('.image-lightbox__close');
+      var lastTrigger = null;
+
+      function openLightbox(img) {
+        lastTrigger = img;
+        lightboxImg.src = img.currentSrc || img.src;
+        lightboxImg.alt = img.alt || 'Enlarged image';
+        lightbox.classList.add('is-open');
+        document.body.classList.add('image-lightbox-open');
+        closeBtn.focus();
+      }
+
+      function closeLightbox() {
+        lightbox.classList.remove('is-open');
+        document.body.classList.remove('image-lightbox-open');
+        lightboxImg.removeAttribute('src');
+        if (lastTrigger) lastTrigger.focus();
+        lastTrigger = null;
+      }
+
+      images.forEach(function(img) {
+        if (img.closest('a')) return;
+        img.classList.add('image-zoomable');
+        img.setAttribute('tabindex', '0');
+        img.setAttribute('role', 'button');
+        img.setAttribute('aria-label', (img.alt ? img.alt + ' — ' : '') + 'Click to enlarge');
+
+        img.addEventListener('click', function() {
+          openLightbox(img);
+        });
+
+        img.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openLightbox(img);
+          }
+        });
+      });
+
+      closeBtn.addEventListener('click', closeLightbox);
+
+      lightbox.addEventListener('click', function(e) {
+        if (e.target === lightbox || e.target.classList.contains('image-lightbox__inner')) {
+          closeLightbox();
+        }
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && lightbox.classList.contains('is-open')) {
+          closeLightbox();
+        }
+      });
+    })();
   </script>
 </body>
 </html>

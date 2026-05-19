@@ -3,7 +3,7 @@ layout: post
 title: "Parallel Mechanism of LightX2V"
 author: "LightX2V Team"
 date: 2026-05-19
-tags: [Parallel]
+tags: [Parallel, CFG Parallelism, Ulysses, Ring]
 ---
 
 ## I. Overview of LightX2V's Parallel Mechanism

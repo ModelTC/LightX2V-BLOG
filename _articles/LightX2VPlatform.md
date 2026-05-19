@@ -8,7 +8,7 @@ tags: [Deploy, Multi-Platform Deployment, Non-Nvidia Platform Deployment]
 
 Video generation inference has long been tightly coupled to the NVIDIA CUDA ecosystem. FlashAttention, cuBLAS, and NCCL are deeply embedded in the hot path of DiT inference. When deploying LightX2V on domestic or alternative AI accelerators—Cambricon MLU, Ascend NPU, Hygon DCU, MetaX, AMD ROCm, and others—the challenge is not just "make PyTorch run," but **aligning every performance-critical operator** (Attention, quantized MatMul, RMSNorm, RoPE, etc.) with the chip vendor's native kernel APIs.
 
-`lightx2v_platform` is a **standalone functional layer** decoupled from the core `lightx2v` inference engine. Its job is to unify inference interfaces across non-NVIDIA chip backends. To support a new accelerator, you only need to implement the corresponding device abstraction and operator kernels inside `lightx2v_platform`—the upper-level model runners, schedulers, and pipeline logic remain unchanged.
+[`lightx2v_platform`](https://github.com/ModelTC/LightX2V/tree/main/lightx2v_platform) is a **standalone functional layer** decoupled from the core `lightx2v` inference engine. Its job is to unify inference interfaces across non-NVIDIA chip backends. To support a new accelerator, you only need to implement the corresponding device abstraction and operator kernels inside `lightx2v_platform`—the upper-level model runners, schedulers, and pipeline logic remain unchanged.
 
 **Table of contents:**
 
@@ -48,6 +48,8 @@ The result: LightX2V's upper layers always call the same interface (`AttnWeightT
 ## lightx2v_platform Architecture Overview
 
 ![lightx2v_platform architecture overview]({{ site.baseurl }}/assets/LightX2VPlatform/platform_img1.png)
+
+Source code: [`lightx2v_platform`](https://github.com/ModelTC/LightX2V/tree/main/lightx2v_platform)
 
 The module has two main parts:
 

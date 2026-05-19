@@ -25,6 +25,7 @@ The framework unifies multiple state-of-the-art generation pipelines behind a si
 | **…** | *And more* | FLF2V, S2V, T2AV, animation, super-resolution, and other X2V tasks |
 
 See the [LightX2V repository](https://github.com/ModelTC/LightX2V) for the full, up-to-date task list.
+
 ---
 
 ## Links

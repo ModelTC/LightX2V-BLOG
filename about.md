@@ -22,7 +22,7 @@ The framework unifies multiple state-of-the-art generation pipelines behind a si
 | **T2I** | Text-to-Image | Generate images from text |
 | **I2I** | Image-to-Image | Edit or transform existing images |
 | **World Model** | Interactive Worlds | Real-time, memory-augmented world simulation |
-| **…** | More | FLF2V, S2V, T2AV, animation, super-resolution ... |
+| **…** | More | FLF2V, S2V, T2AV, animation, super-resolution … |
 
 See the [LightX2V repository](https://github.com/ModelTC/LightX2V) for the full, up-to-date task list.
 

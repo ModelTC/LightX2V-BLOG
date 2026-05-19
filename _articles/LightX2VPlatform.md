@@ -49,7 +49,7 @@ The result: LightX2V's upper layers always call the same interface (`AttnWeightT
 
 ![lightx2v_platform architecture overview]({{ site.baseurl }}/assets/LightX2VPlatform/platform_img1.png)
 
-Source code: [`lightx2v_platform`](https://github.com/ModelTC/LightX2V/tree/main/lightx2v_platform)
+**Source code:** [`https://github.com/ModelTC/LightX2V/tree/main/lightx2v_platform`](https://github.com/ModelTC/LightX2V/tree/main/lightx2v_platform)
 
 The module has two main parts:
 

@@ -4,14 +4,33 @@ title: About LightX2V
 permalink: /about/
 ---
 
-[LightX2V]((https://github.com/ModelTC/LightX2V)) is an advanced lightweight image/video generation inference framework engineered to deliver efficient, high-performance image/video synthesis solutions. This unified platform integrates multiple state-of-the-art image/video generation techniques, supporting diverse generation tasks including text-to-video (T2V), image-to-video (I2V), text-to-image (T2I), image-editing (I2I), World model. X2V represents the transformation of different input modalities (X, such as text or images) into vision output (Vision).
+[LightX2V](https://github.com/ModelTC/LightX2V) is a lightweight inference framework for image and video generation, built to deliver efficient, high-performance synthesis on both NVIDIA and non-NVIDIA hardware.
 
-LightX2V Github: [https://github.com/ModelTC/LightX2V](https://github.com/ModelTC/LightX2V)
+> **X2V** — transform any input modality **X** (text, image, audio, etc.) into **Vision** output.
 
-LightX2V Online Service: [https://x2v.light-ai.top/generate](https://x2v.light-ai.top/generate)
+The framework unifies multiple state-of-the-art generation pipelines behind a single runtime, covering training-adjacent inference workflows from research prototypes to production deployment.
 
-LightX2V Canvas: [https://x2v.light-ai.top/canvas](https://x2v.light-ai.top/canvas)
+---
 
-LightX2V Blog: [https://light-ai.top/LightX2V-BLOG/](https://light-ai.top/LightX2V-BLOG/)
+## Supported Tasks
 
-LightX2V Blog Github: [https://github.com/ModelTC/LightX2V-BLOG](https://github.com/ModelTC/LightX2V-BLOG)
+| Task | Name | Description |
+|---|---|---|
+| **T2V** | Text-to-Video | Generate video from a text prompt |
+| **I2V** | Image-to-Video | Animate a still image into video |
+| **V2V** | Video-to-Video | Generate video from a video |
+| **T2I** | Text-to-Image | Generate images from text |
+| **I2I** | Image-to-Image | Edit or transform existing images |
+| **World Model** | Interactive Worlds | Real-time, memory-augmented world simulation |
+
+---
+
+## Links
+
+| Resource | URL |
+|---|---|
+| **GitHub** | [github.com/ModelTC/LightX2V](https://github.com/ModelTC/LightX2V) |
+| **Online Service** | [x2v.light-ai.top/generate](https://x2v.light-ai.top/generate) |
+| **Canvas** | [x2v.light-ai.top/canvas](https://x2v.light-ai.top/canvas) |
+| **Blog** | [light-ai.top/LightX2V-BLOG](https://light-ai.top/LightX2V-BLOG/) |
+| **Blog GitHub** | [github.com/ModelTC/LightX2V-BLOG](https://github.com/ModelTC/LightX2V-BLOG) |

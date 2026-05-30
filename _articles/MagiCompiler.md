@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Graph Fusion for DiT Inference: Magi Compiler in LightX2V"
-author: "LightX2V Team"
+author: "LightX2V and SandAI"
 date: 2026-05-21
 tags: [MagiCompiler, torch.compile, NeoPP, QwenImage, Performance]
 ---

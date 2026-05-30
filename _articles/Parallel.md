@@ -79,8 +79,6 @@ LightX2V has specially designed the Ulysses-4090 variant for the RTX 4090 GPU. I
 
 Ring Attention, proposed by the University of California, Berkeley, draws on the block-wise computation principle of FlashAttention. It treats the long sequence as a series of "building blocks" (K/V blocks) that need to be assembled sequentially, and distributes them to each GPU. Then, it exchanges the blocks along a ring-shaped communication structure (Ring) like a pipeline until the attention computation for the entire sequence is completed.
 
-![Ring-Attention workflow diagram]({{ site.baseurl }}/assets/Parallel-blog/img3.png)
-
 #### Workflow
 
 1. **Sequence splitting:** Divide the input tokens along the sequence dimension and distribute them to each GPU.

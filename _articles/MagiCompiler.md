@@ -11,7 +11,7 @@ In DiT inference for video and image generation, compute-heavy core operators of
 This post introduces [Magi Compiler](https://github.com/SandAI-org/MagiCompiler) integration in [LightX2V](https://github.com/ModelTC/LightX2V)—a `torch.compile`-based compilation stack tailored for Transformer-style inference. This integration lowers adoption and maintenance cost while delivering:
 
 - **Low engineering cost**: packages subgraph boundaries, dynamic shapes, piecewise compilation, and other `torch.compile` plumbing into a reusable integration path, reducing development and maintenance cost for graph-level compilation in LightX2V.
-- **Steady-state speedups on pre-Triton paths**: ~15–20% per-step improvement on NeoPP at steady state; ~20% on Qwen Image with Triton OFF; closes much of the gap to hand-tuned Triton (~93–94%).
+- **Steady-state speedups on pre-Triton paths**: ~15–20% per-step improvement on [NeoPP](https://huggingface.co/sensenova/SenseNova-U1-8B-MoT) at steady state; ~20% on [Qwen Image](https://huggingface.co/Qwen/Qwen-Image-2512) with Triton OFF; closes much of the gap to hand-tuned Triton (~93–94%).
 - **Multi-resolution serving on the compile path**: within a single process, switching resolutions can reuse compiled subgraphs, avoiding repeated per-shape recompilation that inflates first-step latency.
 
 We thank the **SandAI** team for developing and open-sourcing [Magi Compiler](https://github.com/SandAI-org/MagiCompiler), and for their pioneering integration work in [LightX2V-MagiCompiler](https://github.com/SandAI-org/LightX2V-MagiCompiler)—their compiler design and reference implementation made this LightX2V integration possible.
@@ -118,11 +118,11 @@ LightX2V’s official Docker image and `requirements` include `magi_compiler`. S
 
 **Benchmark conditions**: NVIDIA H100; metric is average `infer_main` latency per DiT step.
 
-#### NeoPP (2K FP8, three-turn dialogue)
+#### [NeoPP](https://huggingface.co/sensenova/SenseNova-U1-8B-MoT) (2K FP8, three-turn dialogue)
 
-NeoPP is a recently integrated model whose small operator chains are **not yet deeply Triton-optimized**. Tests use 2048×2048 resolution, FP8 dense, three consecutive dialogue turns in one script; KV cache grows by ~4k tokens per turn. All statistics **skip step 0**.
+[NeoPP](https://huggingface.co/sensenova/SenseNova-U1-8B-MoT) is a recently integrated model whose small operator chains are **not yet deeply Triton-optimized**. Tests use 2048×2048 resolution, FP8 dense, three consecutive dialogue turns in one script; KV cache grows by ~4k tokens per turn. All statistics **skip step 0**.
 
-**Table 1** NeoPP three-turn dialogue `infer_main` latency (skip step 0)
+**Table 1** [NeoPP](https://huggingface.co/sensenova/SenseNova-U1-8B-MoT) three-turn dialogue `infer_main` latency (skip step 0)
 
 | Turn | Magi ON | Magi OFF | Speedup |
 |------|--------:|---------:|--------:|
@@ -132,9 +132,9 @@ NeoPP is a recently integrated model whose small operator chains are **not yet d
 
 As Table 1 shows, Magi ON vs OFF yields a stable **~15%–20%** gain across all three turns. As dialogue progresses, Attention share rises and small-op share falls, so relative speedup eases from 20% toward 15%.
 
-#### Qwen Image (I2I, multi-resolution)
+#### [Qwen Image](https://huggingface.co/Qwen/Qwen-Image-2512) (I2I, multi-resolution)
 
-Qwen Image is a heavily optimized model in LightX2V with arbitrary-resolution image generation. Tests use I2I across representative H×W sizes. All statistics **skip step 0**.
+[Qwen Image](https://huggingface.co/Qwen/Qwen-Image-2512) is a heavily optimized model in LightX2V with arbitrary-resolution image generation. Tests use I2I across representative H×W sizes. All statistics **skip step 0**.
 
 Table 2 covers four config combinations, labeled `triton_{on|off}_magi_{on|off}`. The last three columns are three comparison metrics:
 
@@ -142,7 +142,7 @@ Table 2 covers four config combinations, labeled `triton_{on|off}_magi_{on|off}`
 - **Speedup ②**: `triton_on_magi_off / triton_off_magi_on` — how close PyTorch + Magi gets to hand-tuned Triton (closer to 100% means closer to `triton_on_magi_off`)
 - **Speedup ③**: `triton_on_magi_on / triton_on_magi_off` — marginal Magi benefit on the Triton-ON path
 
-**Table 2** Qwen Image I2I multi-resolution `infer_main` latency (skip step 0)
+**Table 2** [Qwen Image](https://huggingface.co/Qwen/Qwen-Image-2512) I2I multi-resolution `infer_main` latency (skip step 0)
 
 | H×W | triton_off_magi_off | triton_off_magi_on | triton_on_magi_off | triton_on_magi_on | Speedup ① | Speedup ② | Speedup ③ |
 |-----|--------------------:|-------------------:|-------------------:|------------------:|--:|--:|--:|
@@ -153,11 +153,11 @@ Table 2 covers four config combinations, labeled `triton_{on|off}_magi_{on|off}`
 
 Speedup ① stays around **~1.2×** across resolutions; ② is **~93%–94%**—Magi alone clearly narrows the gap to hand-tuned Triton but remains slightly slower; ③ is near **~1.0×**, so enabling Magi on top of Triton-ON does not yield stable extra benefit.
 
-#### Qwen Image (single-process variable resolution)
+#### [Qwen Image](https://huggingface.co/Qwen/Qwen-Image-2512) (single-process variable resolution)
 
-Qwen Image supports arbitrary resolution. On compile-based serving paths, one worker often handles multiple H×W values; without proper dynamic-shape handling, a resolution change can trigger recompilation and sharply raise first-step latency. This section switches resolutions in one process with Magi ON, comparing first-step vs steady-state latency to verify that dynamic shapes can reuse compiled subgraphs in-process.
+[Qwen Image](https://huggingface.co/Qwen/Qwen-Image-2512) supports arbitrary resolution. On compile-based serving paths, one worker often handles multiple H×W values; without proper dynamic-shape handling, a resolution change can trigger recompilation and sharply raise first-step latency. This section switches resolutions in one process with Magi ON, comparing first-step vs steady-state latency to verify that dynamic shapes can reuse compiled subgraphs in-process.
 
-**Table 3** Qwen Image single-process variable resolution `infer_main` latency (Magi ON)
+**Table 3** [Qwen Image](https://huggingface.co/Qwen/Qwen-Image-2512) single-process variable resolution `infer_main` latency (Magi ON)
 
 | Phase | H×W | step 0 | steady avg |
 |-------|-----|-------:|-----------:|
@@ -237,5 +237,5 @@ Examples already landed in LightX2V for `@magi_compile`, `@magi_register_custom_
 ## Limitations
 
 - **First-step compile latency**: enabling Magi triggers graph compilation and codegen on the first step, which is much slower than steady-state steps.
-- **Mainline support**: NeoPP and Qwen Image are validated and maintained in LightX2V mainline; other models require porting per Chapter 4.
+- **Mainline support**: [NeoPP](https://huggingface.co/sensenova/SenseNova-U1-8B-MoT) and [Qwen Image](https://huggingface.co/Qwen/Qwen-Image-2512) are validated and maintained in LightX2V mainline; other models require porting per Chapter 4.
 - **Other unverified scenarios**: complex parallel combinations have not been systematically tested; complete numerical correctness and steady-state sign-off before production use.

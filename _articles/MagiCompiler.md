@@ -3,7 +3,7 @@ layout: post
 title: "Graph Fusion for DiT Inference: Magi Compiler in LightX2V"
 author: "LightX2V and SandAI"
 date: 2026-05-21
-tags: [MagiCompiler, torch.compile, NeoPP, QwenImage, Performance]
+tags: [MagiCompiler, torch.compile, QwenImage, Performance]
 ---
 
 In DiT inference for video and image generation, compute-heavy core operators often already have dedicated optimized kernels, yet many small operator chains still lack mature, efficient optimizations—memory traffic and kernel launch overhead remain non-trivial. Hand-written Triton can optimize hot spots in those chains, but each pattern requires separate development and maintenance; using `torch.compile` directly often yields unstable gains or even regressions when subgraph boundaries and dynamic shapes are not handled carefully.
@@ -13,6 +13,8 @@ This post introduces [Magi Compiler](https://github.com/SandAI-org/MagiCompiler)
 - **Low engineering cost**: packages subgraph boundaries, dynamic shapes, piecewise compilation, and other `torch.compile` plumbing into a reusable integration path, reducing development and maintenance cost for graph-level compilation in LightX2V.
 - **Steady-state speedups on pre-Triton paths**: ~15–20% per-step improvement on NeoPP at steady state; ~20% on Qwen Image with Triton OFF; closes much of the gap to hand-tuned Triton (~93–94%).
 - **Multi-resolution serving on the compile path**: within a single process, switching resolutions can reuse compiled subgraphs, avoiding repeated per-shape recompilation that inflates first-step latency.
+
+We thank the **SandAI** team for developing and open-sourcing [Magi Compiler](https://github.com/SandAI-org/MagiCompiler), and for their pioneering integration work in [LightX2V-MagiCompiler](https://github.com/SandAI-org/LightX2V-MagiCompiler)—their compiler design and reference implementation made this LightX2V integration possible.
 
 **Table of contents:**
 

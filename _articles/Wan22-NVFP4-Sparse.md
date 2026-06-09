@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Wan2.2-NVFP4-Sparse: Extremely Fast Wan 2.2 14B Inference"
-author: "LightX2V Team"
+author: "Chengtao Lv"
 date: 2026-06-09
 tags: [Wan2.2, NVFP4, Sparse Attention, Video Generation]
 ---
@@ -60,50 +60,60 @@ In this work, the distilled Wan2.2 model uses a 4-step inference schedule: two h
 
 Step distillation reduces the number of DiT forward passes. The next goal is to reduce the latency of each remaining denoising step. We first apply model quantization to the large matrix multiplications in the Transformer blocks, and later further reduce attention cost with sparse attention. Quantization converts high-precision tensors, such as FP16 or BF16 weights and activations, into lower-precision representations. Lower precision reduces memory footprint, memory bandwidth, and Tensor Core compute cost, which is critical for running 14B-class video models on consumer Blackwell GPUs.
 
-In a typical quantization flow, a high-precision value `x` is mapped to a low-precision code and then dequantized back to an approximate value for computation:
+In a typical quantization flow, a high-precision value $x$ is mapped to a low-precision code and then dequantized back to an approximate value for computation:
 
-```text
-q = clamp(round(x / s), q_min, q_max)
-x_hat = s * q
-```
+$$
+Q_U(x)=\mathrm{round}\left(\frac{x}{\Delta}\right)\Delta,
+\quad
+\Delta=\frac{u-l}{2^b-1}.
+$$
 
-Here, `s` is the scaling factor, `q` is the quantized value, and `x_hat` is the dequantized approximation used by the model. The smaller the data type, the more important the scaling strategy becomes: 4-bit formats have very limited representable values, so a single coarse scale can introduce large quantization error.
+Here, $b$ is the bit width, $x$ is a floating-point activation or weight in the clipping range $(l,u)$, and $\Delta$ is the interval length after dividing the original range into $2^b-1$ intervals. This quantization-dequantization process maps continuous high-precision values onto a finite low-precision grid. The smaller the data type, the more important the scaling strategy becomes: 4-bit formats have very limited representable values, so a single coarse scale can introduce large quantization error.
 
 Blackwell GPUs introduce hardware support for FP4 computation, and NVFP4 is NVIDIA's block-scaled 4-bit floating-point format designed for this generation. Each NVFP4 tensor element uses an E2M1 4-bit value, with 1 sign bit, 2 exponent bits, and 1 mantissa bit. To preserve dynamic range, NVFP4 uses hierarchical scaling:
 
-```text
-x_hat = x_e2m1 * s_block * s_global
-```
+$$
+\hat{x}=x_{\mathrm{e2m1}}\cdot s_{\mathrm{block}}\cdot s_{\mathrm{global}}.
+$$
 
-where `x_e2m1` is the 4-bit floating-point value, `s_block` is an FP8 E4M3 scale shared by a block of 16 consecutive elements, and `s_global` is an FP32 scale applied to the whole tensor. The scaling factors can be computed from the tensor and block maximum absolute values:
+where $x_{\mathrm{e2m1}}$ is the 4-bit floating-point value, $s_{\mathrm{block}}$ is an FP8 E4M3 scale shared by a block of 16 consecutive elements, and $s_{\mathrm{global}}$ is an FP32 scale applied to the whole tensor. The scaling factors can be computed from the tensor and block maximum absolute values:
 
-```text
-s_global = global_amax / (fp8_max * fp4_max)
-s_block  = (block_amax / fp4_max) / s_global
-```
+$$
+s_{\mathrm{global}}=
+\frac{\mathrm{global\_amax}}{\mathrm{fp8}_{\max}\cdot \mathrm{fp4}_{\max}},
+\quad
+s_{\mathrm{block}}=
+\frac{\mathrm{block\_amax}/\mathrm{fp4}_{\max}}{s_{\mathrm{global}}}.
+$$
 
-With NVFP4 E2M1, `fp4_max` is 6.0, and the FP8 E4M3 block scale provides finer-grained, non-power-of-two scaling. This makes NVFP4 more expressive than a plain 4-bit format with only one tensor-level scale, while still keeping the storage and bandwidth close to FP4. In practice, the expensive linear layers can be executed with NVFP4 weights and activations, reducing both memory traffic and GEMM latency on Blackwell Tensor Cores.
+With NVFP4 E2M1, $\mathrm{fp4}_{\max}$ is 6.0, and the FP8 E4M3 block scale provides finer-grained, non-power-of-two scaling. This makes NVFP4 more expressive than a plain 4-bit format with only one tensor-level scale, while still keeping the storage and bandwidth close to FP4. In practice, the expensive linear layers can be executed with NVFP4 weights and activations, reducing both memory traffic and GEMM latency on Blackwell Tensor Cores.
 
 For aggressive 4-bit quantization, post-training quantization alone is often not enough for video generation quality. We therefore use quantization-aware training during distillation. During the forward pass, fake-quantized tensors are used so that the student model learns under the same numerical constraints it will see at inference time:
 
-```text
-x_qat = dequantize(quantize(x))
-y = f(x_qat)
-```
+$$
+x_{\mathrm{qat}}=Q_U(x),
+\quad
+y=f(x_{\mathrm{qat}}).
+$$
 
 The difficulty is that quantization contains rounding and clipping, which are not directly differentiable. To train through this path, we use the straight-through estimator (STE). In the forward pass, the model still sees the quantized value. In the backward pass, the gradient is approximated as if the quantization operation were the identity function within the valid range:
 
-```text
-forward:
-  x_qat = Q(x)
+$$
+\text{Forward:}\quad x_{\mathrm{qat}}=Q_U(x),
+$$
 
-backward:
-            { 1,  if x_min <= x <= x_max
-  dQ(x)/dx ={
-            { 0,  otherwise
-
-  dL/dx ~= dL/dx_qat * dQ(x)/dx
-```
+$$
+\frac{\partial Q_U(x)}{\partial x}\approx
+\begin{cases}
+1, & x_{\min}\le x\le x_{\max},\\
+0, & \text{otherwise},
+\end{cases}
+\quad
+\frac{\partial \mathcal{L}}{\partial x}
+\approx
+\frac{\partial \mathcal{L}}{\partial x_{\mathrm{qat}}}
+\frac{\partial Q_U(x)}{\partial x}.
+$$
 
 Equivalently, STE lets gradients update the high-precision master weights while the forward computation remains aware of NVFP4 quantization error. This is especially important for step-distilled video models, where the student already has fewer denoising opportunities to correct numerical errors.
 
@@ -118,7 +128,7 @@ The key observation is that full token-to-token attention is often redundant. Ma
 This design has two stages.
 
 **First, estimate block importance with block-level mean vectors.**  
-Given query, key, and value tensors `Q`, `K`, `V` in `R^{n x d}`, we partition the sequence dimension into query blocks and key/value blocks:
+Given query, key, and value tensors $Q$, $K$, $V \in \mathbb{R}^{n \times d}$, we partition the sequence dimension into query blocks and key/value blocks:
 
 $$
 Q = [Q_1;\ldots;Q_{n_q}],\quad
@@ -126,7 +136,7 @@ K = [K_1;\ldots;K_{n_k}],\quad
 V = [V_1;\ldots;V_{n_k}],
 $$
 
-where `Q_i in R^{b_q x d}` and `K_j, V_j in R^{b_{kv} x d}`. The number of blocks is `n_q = ceil(n / b_q)` and `n_k = ceil(n / b_{kv})`.
+where $Q_i \in \mathbb{R}^{b_q \times d}$ and $K_j,V_j \in \mathbb{R}^{b_{kv} \times d}$. The number of blocks is $n_q = \lceil n / b_q \rceil$ and $n_k = \lceil n / b_{kv} \rceil$.
 
 For each block, we compute a mean vector along the token dimension:
 
@@ -145,16 +155,16 @@ $$
 Each element in $P_c$ estimates the importance of a query block attending to a key/value block. Based on these scores, LightX2V builds a dynamic block mask $B \in \{0,1\}^{n_q \times n_k}$, where $B_{ij}=1$ means the $(i,j)$ attention tile is selected and $B_{ij}=0$ means it can be skipped. In practice, we use an 80%-90% sparsity ratio, which means keeping the top 10%-20% most important blocks for sparse attention.
 
 **Second, compute sparse attention only on selected blocks.**  
-With the block mask `B`, block-sparse attention can be written as:
+With the block mask $B$, block-sparse attention can be written as:
 
 $$
 \mathrm{SparseAttn}(Q,K,V;B)
 = \mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d_k}} \odot M(B)\right)V,
 $$
 
-where `M(B)` expands the block mask into an element-wise mask that is constant inside each `b_q x b_{kv}` tile, and `\odot` denotes element-wise multiplication. In the actual kernel implementation, LightX2V does not materialize the full `n x n` mask. Instead, it computes only the tile products `Q_i K_j^T` and the corresponding value aggregation for active block pairs with `B_ij = 1`, skipping entire tiles when `B_ij = 0`.
+where $M(B)$ expands the block mask into an element-wise mask that is constant inside each $b_q \times b_{kv}$ tile, and $\odot$ denotes element-wise multiplication. In the actual kernel implementation, LightX2V does not materialize the full $n \times n$ mask. Instead, it computes only the tile products $Q_iK_j^\top$ and the corresponding value aggregation for active block pairs with $B_{ij}=1$, skipping entire tiles when $B_{ij}=0$.
 
-As a result, the computational and memory costs scale with the number of active blocks rather than the full `n^2` attention matrix. At the same time, computation inside each selected tile remains dense and GPU-friendly, which makes the method compatible with high-throughput attention kernels and modern accelerator memory access patterns.
+As a result, the computational and memory costs scale with the number of active blocks rather than the full $n^2$ attention matrix. At the same time, computation inside each selected tile remains dense and GPU-friendly, which makes the method compatible with high-throughput attention kernels and modern accelerator memory access patterns.
 
 ## 🚀 Quick Start
 

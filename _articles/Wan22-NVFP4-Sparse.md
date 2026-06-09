@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Wan2.2-NVFP4-Sparse: Extremely Fast Wan 2.2 14B Inference"
-author: "Chengtao Lv"
+author: "LightX2V Team, Chengtao Lv"
 date: 2026-06-09
 tags: [Wan2.2, NVFP4, Sparse Attention, Video Generation]
 ---

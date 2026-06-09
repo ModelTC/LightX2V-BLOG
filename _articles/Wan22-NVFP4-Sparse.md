@@ -6,6 +6,8 @@ date: 2026-06-09
 tags: [Wan2.2, NVFP4, Sparse Attention, Video Generation]
 ---
 
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-Wan2.2--NVFP4--Sparse-yellow)](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)
+
 Video generation has received broad attention in recent years, driven by the impressive visual quality and motion consistency of models such as Wan, Sora, Seedance, and other large-scale diffusion Transformers. These models have made it possible to generate high-resolution, temporally coherent videos from text or image prompts, opening up new workflows for creative production, simulation, advertising, and interactive content.
 
 However, the same capabilities also make modern video generation extremely resource intensive. For 14B video DiT models, inference can easily become impractical on consumer GPUs because both latency and memory usage scale aggressively with model size, video resolution, frame count, and sequence length. In practice, running a large model such as Wan2.2-A14B on a single consumer GPU is challenging without a carefully optimized inference stack.

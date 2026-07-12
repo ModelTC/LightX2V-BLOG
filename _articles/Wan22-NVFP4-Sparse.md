@@ -1,9 +1,9 @@
 ---
 layout: post
 title: "Wan2.2-NVFP4-Sparse: Extremely Fast Wan 2.2 14B Inference"
-author: "Chengtao Lv, LightX2V Team"
-date: 2026-06-09
-tags: [Wan2.2, NVFP4, Sparse Attention, Video Generation]
+author: "Chengtao Lv, Zihao Peng, LightX2V Team"
+date: 2026-07-11
+tags: [Wan2.2, NVFP4, Sparse Attention, Sequence Parallel, Video Generation]
 ---
 
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-Wan2.2--NVFP4--Sparse-yellow)](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)
@@ -26,13 +26,17 @@ The bottleneck comes from several sources:
 4. **High peak memory usage.**  
    Large model weights, long video token sequences, attention buffers, and intermediate activations together push peak VRAM usage very high. This is often the immediate blocker for running 14B-class models on GPUs with around 30 GB of memory.
 
-To address these challenges, the LightX2V team performs joint optimization across both the model and inference framework. The goal is not only to make Wan2.2-A14B faster, but also to make it runnable on a single RTX 5090-class GPU with roughly 30 GB of VRAM. This work combines step distillation, low-precision kernels, sparse attention, efficient operators, and multi-granularity offload into one practical inference path.
+To address these challenges, the LightX2V team performs joint optimization across both the model and inference framework. For **single-GPU inference**, the goal is not only to make Wan2.2-A14B faster, but also to make it runnable on a single RTX 5090-class GPU with roughly 30 GB of VRAM. This single-GPU optimization path combines step distillation, low-precision kernels, sparse quantized attention, efficient operators, and multi-granularity offload into one practical inference stack.
+
+For **multi-GPU inference**, we extend the single-GPU stack with sequence parallel inference, FP8 communication, tensor fusion, and head parallelism. These distributed optimizations enable **8-GPU 720p real-time video generation**: a 5-second 720p video can be generated in **4.3 seconds end to end**, making generation effectively real time.
 
 The main techniques include:
 
 - **Step Distillation**: Two high-noise expert steps followed by two low-noise expert steps, enabling extremely fast Wan2.2 MoE generation on a single Blackwell GPU.
 - **NVFP4 Quantization**: Quantization-aware step distillation reduces memory traffic and compute cost while targeting Blackwell architecture.
-- **Sparse Attention**: Accelerates the costly O(n^2) self-attention workload with sparse attention, reducing end-to-end latency for high-resolution video generation.
+- **Sparse Quantized Attention**: Accelerates the costly O(n^2) self-attention workload with sparse attention and replaces the sparse attention operator with SageAttention2 (`sage2`) for a faster FP8 sparse attention path.
+- **Sequence Parallelism**: Splits long video token sequences across multiple GPUs with Ulysses-style sequence-parallel attention, reducing the attention workload on each GPU.
+- **FP8 Communication, Tensor Fusion, and Head Parallelism**: Reduces sequence-parallel all-to-all traffic with FP8 communication, fuses QKV communication layouts, and overlaps communication and attention by processing local heads independently.
 - **Efficient Operators**: Replaces naive implementations of operations such as 3D RoPE and RMSNorm with efficient parallel kernels, reducing framework overhead around the main Transformer computation.
 - **Offload Optimization**: In addition to model-level offload, LightX2V provides block-level offload, allowing finer-grained weight movement and lower peak GPU memory usage during inference.
 
@@ -168,6 +172,24 @@ where $M(B)$ expands the block mask into an element-wise mask that is constant i
 
 As a result, the computational and memory costs scale with the number of active blocks rather than the full $n^2$ attention matrix. At the same time, computation inside each selected tile remains dense and GPU-friendly, which makes the method compatible with high-throughput attention kernels and modern accelerator memory access patterns.
 
+## Multi-GPU Inference
+
+After pushing single-GPU acceleration close to its practical limit, Wan2.2-NVFP4-Sparse achieves more than a 50x speedup over the original model. However, single-GPU inference still remains far from real-time performance, as shown by the benchmark results below. The LightX2V team has therefore developed a series of optimizations for multi-GPU distributed inference, enabling a 14B video generation model to achieve true real-time performance at 720p.
+
+LightX2V exposes these optimizations through the `parallel` section of the config. An example configuration is:
+
+```json
+"parallel": {
+    "seq_p_size": 8,
+    "seq_p_fp8_comm": true,
+    "seq_p_head_parallel": true,
+    "seq_p_tensor_fusion": true,
+    "seq_p_attn_type": "ulysses-opt"
+}
+```
+
+Here, `seq_p_size` sets the number of GPUs in the sequence-parallel group, while `seq_p_attn_type: "ulysses-opt"` selects LightX2V's optimized Ulysses sequence-parallel attention implementation. Enabling `seq_p_fp8_comm` reduces all-to-all communication volume by transmitting FP8 payloads, `seq_p_tensor_fusion` combines QKV communication to reduce launch and layout overhead, and `seq_p_head_parallel` processes attention heads in parallel to improve communication-computation overlap.
+
 ## 🚀 Quick Start
 
 We strongly recommend using the official LightX2V Docker image for the cleanest environment and best reproducibility.
@@ -215,13 +237,20 @@ bash scripts/wan22/distill/run_wan22_moe_t2v_extreme.sh
 bash scripts/wan22/distill/run_wan22_moe_i2v_extreme.sh
 ```
 
+> **Note:** For multi-GPU T2V and I2V inference, simply add the configuration shown above.
+
 Scripts:
 - [run_wan22_moe_t2v_extreme.sh](https://github.com/ModelTC/LightX2V/blob/main/scripts/wan22/distill/run_wan22_moe_t2v_extreme.sh)
 - [run_wan22_moe_i2v_extreme.sh](https://github.com/ModelTC/LightX2V/blob/main/scripts/wan22/distill/run_wan22_moe_i2v_extreme.sh)
 
-**Test Environment**: RTX 5090 Single GPU | LightX2V Framework | End-to-End Latency
+**Test Environment**: RTX 5090 GPU(s) | LightX2V Framework | End-to-End Latency
 
-| Resolution | Wan2.2-T2V-14B | Wan2.2-NVFP4-Sparse | Speedup |
-| --- | ---: | ---: | ---: |
-| 480p | 734s | 14.15s | 51.9x |
-| 720p | 2668s | 45s | 59.3x |
+| Method              | GPU Number | Resolution | E2E Latency | Speedup |
+| ------------------- | ---------: | ---------: | ----------: | ------: |
+| Wan2.2-T2V-14B      |          1 |       480p |        734s |    1.0x |
+| Wan2.2-NVFP4-Sparse |          1 |       480p |       9.25s |   79.4x |
+| Wan2.2-NVFP4-Sparse |          8 |       480p |       1.97s |  372.6x |
+| Wan2.2-T2V-14B      |          1 |       720p |       2668s |    1.0x |
+| Wan2.2-NVFP4-Sparse |          1 |       720p |       22.9s |  116.5x |
+| Wan2.2-NVFP4-Sparse |          8 |       720p |       4.11s |  649.1x |
+

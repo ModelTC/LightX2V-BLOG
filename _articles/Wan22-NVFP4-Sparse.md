@@ -8,7 +8,7 @@ tags: [Wan2.2, NVFP4, Sparse Attention, Sequence Parallel, Video Generation]
 
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-Wan2.2--NVFP4--Sparse-yellow)](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)
 
-This blog post explains how to accelerate the Wan 2.2 14B model by 600%, achieving real-time video generation at 19.7 FPS.
+This blog post explains how to accelerate the Wan 2.2 14B model by 600%, achieving real-time video generation at 19.7 FPS for 5-second 720p videos on RTX 5090 GPUs.
 
 Video generation has received broad attention in recent years, driven by the impressive visual quality and motion consistency of models such as Wan, Sora, Seedance, and other large-scale diffusion Transformers. These models have made it possible to generate high-resolution, temporally coherent videos from text or image prompts, opening up new workflows for creative production, simulation, advertising, and interactive content.
 

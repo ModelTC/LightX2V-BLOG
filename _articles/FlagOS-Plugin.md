@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "LightX2V x FlagOS: A Plugin Design for Cross-Chip Video Generation Inference"
-author: "LightX2V Team"
+author: "Huiting Yu, LightX2V Team"
 date: 2026-07-10
 tags: [FlagOS, Plugin, Multi-Platform Deployment, FlagGems, FlagCX]
 ---
@@ -44,6 +44,7 @@ The integration is designed around four goals:
 - [Quick Start](#quick-start)
 - [Practical Recommendations](#practical-recommendations)
 - [Limitations and Next Steps](#limitations-and-next-steps)
+- [Resources](#resources)
 
 ---
 
@@ -429,3 +430,8 @@ the video inference pipeline, while FlagOS owns the cross-chip operator and
 communication layer. As FlagOS coverage expands, the same `PLATFORM=flagos`
 backend can reduce repeated per-vendor integration work and make cross-chip
 video generation deployment more maintainable.
+
+## Resources
+
+- [LightX2V x FlagOS plugin repository](https://github.com/ModelTC/lightx2v-plugin-FL/)
+- [LightX2V integration pull request #1126](https://github.com/ModelTC/LightX2V/pull/1126)

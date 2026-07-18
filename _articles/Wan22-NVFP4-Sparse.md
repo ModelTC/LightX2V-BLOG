@@ -190,7 +190,7 @@ LightX2V exposes these optimizations through the `parallel` section of the confi
 }
 ```
 
-Here, `seq_p_size` sets the number of GPUs in the sequence-parallel group, while `seq_p_attn_type: "ulysses-opt"` selects LightX2V's optimized Ulysses sequence-parallel attention implementation. Enabling `seq_p_fp8_comm` reduces all-to-all communication volume by transmitting FP8 payloads, `seq_p_tensor_fusion` combines QKV communication to reduce launch and layout overhead, and `seq_p_head_parallel` processes attention heads in parallel to improve communication-computation overlap.
+Here, seq_p_size sets the number of GPUs in the sequence-parallel group. seq_p_attn_type: "ulysses-opt" selects LightX2V’s optimized Ulysses implementation, which uses fused Triton pre/post kernels to streamline layout transformations around all-to-all communication. seq_p_fp8_comm reduces communication volume by transmitting FP8 payloads. seq_p_tensor_fusion packs QKV into a shared communication buffer to reduce collective and layout overhead. seq_p_head_parallel pipelines per-head communication with attention computation to hide part of the communication latency.
 
 ## 🚀 Quick Start
 
@@ -202,11 +202,17 @@ We strongly recommend using the official LightX2V Docker image for the cleanest 
 # 1. Pull LightX2V Docker image
 docker pull lightx2v/lightx2v:26052801-cu130-5090
 
-# 2. Run text-to-video inference
-bash scripts/wan22/distill/run_wan22_moe_t2v_extreme.sh
+# 2. Run single-GPU inference
+# Text-to-video
+bash scripts/wan22/extreme/run_wan22_moe_t2v_extreme.sh
+# Image-to-video
+bash scripts/wan22/extreme/run_wan22_moe_i2v_extreme.sh
 
-# 3. Run image-to-video inference
-bash scripts/wan22/distill/run_wan22_moe_i2v_extreme.sh
+# 3. Run multi-GPU sequence-parallel inference
+# Text-to-video
+bash scripts/wan22/extreme/run_wan22_moe_t2v_extreme_sp_parallel.sh
+# Image-to-video
+bash scripts/wan22/extreme/run_wan22_moe_i2v_extreme_sp_parallel.sh
 ```
 
 ### Option B: Manual Installation
@@ -232,27 +238,62 @@ uv build --wheel \
 
 pip install dist/*whl --force-reinstall --no-deps
 
-# 3. Run text-to-video inference
-bash scripts/wan22/distill/run_wan22_moe_t2v_extreme.sh
+# 3. Run single-GPU inference
+# Text-to-video
+bash scripts/wan22/extreme/run_wan22_moe_t2v_extreme.sh
+# Image-to-video
+bash scripts/wan22/extreme/run_wan22_moe_i2v_extreme.sh
 
-# 4. Run image-to-video inference
-bash scripts/wan22/distill/run_wan22_moe_i2v_extreme.sh
+# 4. Run multi-GPU sequence-parallel inference
+# Text-to-video
+bash scripts/wan22/extreme/run_wan22_moe_t2v_extreme_sp_parallel.sh
+# Image-to-video
+bash scripts/wan22/extreme/run_wan22_moe_i2v_extreme_sp_parallel.sh
 ```
 
-> **Note:** For multi-GPU T2V and I2V inference, simply add the configuration shown above.
+> **Note:** The multi-GPU scripts use sequence parallelism with the configuration shown above.
 
 Scripts:
-- [run_wan22_moe_t2v_extreme.sh](https://github.com/ModelTC/LightX2V/blob/main/scripts/wan22/distill/run_wan22_moe_t2v_extreme.sh)
-- [run_wan22_moe_i2v_extreme.sh](https://github.com/ModelTC/LightX2V/blob/main/scripts/wan22/distill/run_wan22_moe_i2v_extreme.sh)
+
+**Single-GPU:**
+
+- [run_wan22_moe_t2v_extreme.sh](https://github.com/ModelTC/LightX2V/blob/main/scripts/wan22/extreme/run_wan22_moe_t2v_extreme.sh)
+- [run_wan22_moe_i2v_extreme.sh](https://github.com/ModelTC/LightX2V/blob/main/scripts/wan22/extreme/run_wan22_moe_i2v_extreme.sh)
+
+**Multi-GPU:**
+
+- [run_wan22_moe_t2v_extreme_sp_parallel.sh](https://github.com/ModelTC/LightX2V/blob/main/scripts/wan22/extreme/run_wan22_moe_t2v_extreme_sp_parallel.sh)
+- [run_wan22_moe_i2v_extreme_sp_parallel.sh](https://github.com/ModelTC/LightX2V/blob/main/scripts/wan22/extreme/run_wan22_moe_i2v_extreme_sp_parallel.sh)
 
 **Test Environment**: RTX 5090 GPU(s) | LightX2V Framework | End-to-End Latency
 
-| Method              | GPU Number | Resolution | E2E Latency | Speedup |
-| ------------------- | ---------: | ---------: | ----------: | ------: |
-| Wan2.2-T2V-14B      |          1 |       480p |        734s |    1.0x |
-| Wan2.2-NVFP4-Sparse |          1 |       480p |       9.25s |   79.4x |
-| Wan2.2-NVFP4-Sparse |          8 |       480p |       1.97s |  372.6x |
-| Wan2.2-T2V-14B      |          1 |       720p |       2668s |    1.0x |
-| Wan2.2-NVFP4-Sparse |          1 |       720p |       22.9s |  116.5x |
-| Wan2.2-NVFP4-Sparse |          8 |       720p |       4.11s |  649.1x |
+| Method                                                                                                                  | Task | GPU Number | Resolution | NFE | E2E Latency | Speedup |
+| ----------------------------------------------------------------------------------------------------------------------- | :--: | ---------: | ---------: | --: | ----------: | ------: |
+| Wan2.2-T2V-14B                                                                                                         | T2V  |          1 |       480p |  40 |      734.0s |    1.0x |
+| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | T2V  |          1 |       480p |   4 |        9.1s |   80.7x |
+| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | T2V  |          8 |       480p |   4 |        1.9s |  382.3x |
+| Wan2.2-T2V-14B                                                                                                         | T2V  |          1 |       720p |  40 |     2668.0s |    1.0x |
+| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | T2V  |          1 |       720p |   4 |       22.5s |  118.7x |
+| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | T2V  |          8 |       720p |   4 |        3.8s |  705.8x |
+| Wan2.2-I2V-14B                                                                                                         | I2V  |          1 |       480p |  40 |      787.0s |    1.0x |
+| [**TurboWan2.2-I2V-A14B**](https://huggingface.co/TurboDiffusion/TurboWan2.2-I2V-A14B-720P)                              | I2V  |          1 |       480p |   4 |       37.2s |   21.2x |
+| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | I2V  |          1 |       480p |   4 |       10.7s |   73.9x |
+| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | I2V  |          8 |       480p |   4 |        2.4s |  323.9x |
+| Wan2.2-I2V-14B                                                                                                         | I2V  |          1 |       720p |  40 |     2685.0s |    1.0x |
+| [**TurboWan2.2-I2V-A14B**](https://huggingface.co/TurboDiffusion/TurboWan2.2-I2V-A14B-720P)                              | I2V  |          8 |       720p |   4 |       63.6s |   42.2x |
+| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | I2V  |          1 |       720p |   4 |       26.7s |  100.5x |
+| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | I2V  |          8 |       720p |   4 |        4.5s |  599.3x |
 
+### Benchmark Notes
+
+1. All reported latency values are end-to-end inference times. In addition to DiT execution, they include VAE and text encoder latency. Video saving time is excluded. To reproduce the measurements, remove the `--save_result_path` argument from the shell command.
+2. Sparse attention uses **90% sparsity**. For better generation quality, reduce the sparsity to **80%**.
+3. Operator warm-up is enabled for all benchmarks by adding the `--warmup` argument to the inference scripts.
+4. CPU offload is enabled for the text encoder but disabled for the NVFP4 DiT. For GPUs with less than 30 GB of VRAM, update the config as follows:
+
+```json
+"cpu_offload": true,
+"offload_granularity": "block"
+```
+
+5. The model is trained at 480p, so its **Best Resolution is 480p**. Generation quality at 720p may be affected, particularly for I2V tasks. We will continue to improve and update the model.

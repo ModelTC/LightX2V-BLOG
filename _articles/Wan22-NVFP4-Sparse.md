@@ -280,7 +280,7 @@ Scripts:
 | [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | I2V  |          1 |       480p |   4 |       10.7s |   73.9x |
 | [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | I2V  |          8 |       480p |   4 |        2.4s |  323.9x |
 | Wan2.2-I2V-14B                                                                                                         | I2V  |          1 |       720p |  40 |     2685.0s |    1.0x |
-| [**TurboWan2.2-I2V-A14B**](https://huggingface.co/TurboDiffusion/TurboWan2.2-I2V-A14B-720P)                              | I2V  |          8 |       720p |   4 |       63.6s |   42.2x |
+| [**TurboWan2.2-I2V-A14B**](https://huggingface.co/TurboDiffusion/TurboWan2.2-I2V-A14B-720P)                              | I2V  |          1 |       720p |   4 |       63.6s |   42.2x |
 | [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | I2V  |          1 |       720p |   4 |       26.7s |  100.5x |
 | [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | I2V  |          8 |       720p |   4 |        4.5s |  599.3x |
 

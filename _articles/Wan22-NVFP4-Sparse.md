@@ -298,3 +298,5 @@ Scripts:
 
 5. The model is trained at 480p, so its **Best Resolution is 480p**. Generation quality at 720p may be affected, particularly for I2V tasks. We will continue to improve and update the model.
 6. All LightX2V latency results reported above were measured using commit [`363a7848c55eeb0b1834a90e2ee4a7480757a1d8`](https://github.com/ModelTC/LightX2V/commit/363a7848c55eeb0b1834a90e2ee4a7480757a1d8).
+
+For questions or issues, please open an issue on [LightX2V](https://github.com/ModelTC/LightX2V/issues) or contact lvchengtao0319@gmail.com.

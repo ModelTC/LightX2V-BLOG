@@ -171,6 +171,10 @@ The following screenshot shows the visualization interface for the LIBERO enviro
 
 ![LIBERO environment visualization interface]({{ site.baseurl }}/assets/LightX2V_ROS/libero.png)
 
+The Isaac client provides a WebRTC-based interface for visualizing the simulation:
+
+![Isaac client WebRTC simulation visualization interface]({{ site.baseurl }}/assets/LightX2V_ROS/isaac.png)
+
 In addition to displaying live views, the browser page reads the state machine, task, seed, episode progress, and historical success rate from `/status`. Operations such as Start, Pause, Resume, Restart, and Set Task are sent via HTTP `POST /control`, converted into ROS control JSON, and executed by the shared `SimulatorNode`.
 
 A single RoboTwin action may contain many physics simulation steps. RoboTwin can publish intermediate views through a frame callback without publishing a new `observation_ready` event. As a result, the viewer shows continuous motion without incorrectly triggering repeated policy inference.

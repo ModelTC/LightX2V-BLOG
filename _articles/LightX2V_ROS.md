@@ -163,7 +163,7 @@ While executing an Action Chunk, the node collects real camera frames at the VAE
 
 In a multi-GPU configuration, only rank 0 participates in ROS DDS communication. Rank 0 broadcasts the complete observation and step/reset/stop commands to the other `torchrun` ranks. All ranks enter model collectives in sync, and only rank 0 publishes the final action to RoboLab. This preserves LightX2V's parallel inference capabilities without creating duplicate nodes or actions in the ROS graph.
 
-## Visualization Node: More Than a Live View
+## Visualization Node
 
 The [`image_web_viewer_node`](../src/visualization/visualization/image_web_viewer_node/main.py) automatically subscribes to every camera in the current environment based on the EnvContract. It encodes ROS images as JPEG and serves MJPEG streams through a multithreaded HTTP server.
 
@@ -178,8 +178,3 @@ The following screenshot shows the visualization interface for the RoboTwin envi
 The Isaac client provides a WebRTC-based interface for visualizing the simulation:
 
 ![Isaac client WebRTC simulation visualization interface]({{ site.baseurl }}/assets/LightX2V_ROS/isaac.png)
-
-
-In addition to displaying live views, the browser page reads the state machine, task, seed, episode progress, and historical success rate from `/status`. Operations such as Start, Pause, Resume, Restart, and Set Task are sent via HTTP `POST /control`, converted into ROS control JSON, and executed by the shared `SimulatorNode`.
-
-A single RoboTwin action may contain many physics simulation steps. RoboTwin can publish intermediate views through a frame callback without publishing a new `observation_ready` event. As a result, the viewer shows continuous motion without incorrectly triggering repeated policy inference.

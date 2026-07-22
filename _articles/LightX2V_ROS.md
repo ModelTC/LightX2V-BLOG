@@ -167,6 +167,10 @@ In a multi-GPU configuration, only rank 0 participates in ROS DDS communication.
 
 The [`image_web_viewer_node`](../src/visualization/visualization/image_web_viewer_node/main.py) automatically subscribes to every camera in the current environment based on the EnvContract. It encodes ROS images as JPEG and serves MJPEG streams through a multithreaded HTTP server.
 
+The following screenshot shows the visualization interface for the LIBERO environment:
+
+![LIBERO environment visualization interface]({{ site.baseurl }}/assets/LightX2V_ROS/libero.png)
+
 In addition to displaying live views, the browser page reads the state machine, task, seed, episode progress, and historical success rate from `/status`. Operations such as Start, Pause, Resume, Restart, and Set Task are sent via HTTP `POST /control`, converted into ROS control JSON, and executed by the shared `SimulatorNode`.
 
 A single RoboTwin action may contain many physics simulation steps. RoboTwin can publish intermediate views through a frame callback without publishing a new `observation_ready` event. As a result, the viewer shows continuous motion without incorrectly triggering repeated policy inference.

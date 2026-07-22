@@ -3,7 +3,7 @@ layout: post
 title: "LightX2V ROS: Closing the Loop for Action-Generating World Models"
 author: "LightX2V Team"
 date: 2026-07-22
-tags: [LightX2V, World Models, Robotics, Video Action Models, Simulator Env]
+tags: [World Models, ROS2, Simulator Env, Robotics, Video Action Models]
 ---
 
 A world model that can output actions does not automatically become a system capable of controlling a robot after a single inference pass.

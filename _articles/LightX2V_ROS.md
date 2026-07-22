@@ -6,8 +6,6 @@ date: 2026-07-22
 tags: [LightX2V, ROS 2, Robotics, World Models]
 ---
 
-# LightX2V ROS: Closing the Loop for Action-Generating World Models
-
 A world model that can output actions does not automatically become a system capable of controlling a robot after a single inference pass.
 
 Real robotic control is a continuous loop: the model reads images and robot states from the current environment and predicts an action; the environment executes the action and changes; the model then reads the new observation and predicts the next action. If this loop is broken, the model produces only an offline trajectory rather than a policy that can interact with the environment.

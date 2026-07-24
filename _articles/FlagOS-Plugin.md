@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "LightX2V x FlagOS: A Plugin Design for Cross-Chip Video Generation Inference"
-author: "Huiting Yu, LightX2V Team"
+author: "Huiting Yu, Xin Wen, LightX2V Team"
 date: 2026-07-10
 tags: [FlagOS, Plugin, Multi-Platform Deployment, FlagGems, FlagCX]
 ---

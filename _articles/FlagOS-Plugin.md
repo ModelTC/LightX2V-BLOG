@@ -43,6 +43,7 @@ The integration is designed around four goals:
 - [Operator Coverage](#operator-coverage)
 - [Quick Start](#quick-start)
 - [Practical Recommendations](#practical-recommendations)
+- [DreamZero Validation: Native vs FlagOS](#dreamzero-validation-native-vs-flagos)
 - [Limitations and Next Steps](#limitations-and-next-steps)
 - [Resources](#resources)
 
@@ -412,6 +413,95 @@ To disable FlagCX intentionally:
 export LIGHTX2V_FL_DISABLE_FLAGCX=1
 ```
 
+## DreamZero Validation: Native vs FlagOS
+
+DreamZero extends the initial Wan T2V validation to an I2VA robotics
+workload. The experiment below compares the native LightX2V execution path with
+the FlagOS plugin on the same PPU-ZW810E accelerators. All
+model, input, sampling, and parallelism settings are held constant so that the
+backend is the only intended variable.
+
+### Experimental Setup <!-- omit from toc -->
+
+| Item | Configuration |
+|---|---|
+| Hardware | PPU-ZW810E, 97,920 MiB per device |
+| Number of devices | 2 |
+| Model | DreamZero-DROID |
+| Task | I2VA |
+| Input | DROID three-camera observation |
+| Prompt | `Move the pan forward and use the brush in the middle of the plates to brush the inside of the pan` |
+| Resolution | 640 × 352 |
+| Video inference steps | 16 |
+| Action inference steps | 16 |
+| Seed | 1140 |
+| Parallelism | CFG parallelism, size 2 |
+| PPU driver / HGGC version | 1.3.2-d7f5a2 / 13.0 |
+| LightX2V commit | [`6aa6795`](https://github.com/ModelTC/LightX2V/commit/6aa679596ad61ac99dc92fcf5e885ce24e759eea) |
+| `lightx2v-plugin-FL` commit | [`b152204`](https://github.com/ModelTC/lightx2v-plugin-FL/commit/b152204ee582e68dc5eedb565511cfc25d98a009) |
+| FlagGems version | `5.0.2+v0.1.0.ppu2.1.0.ce` |
+| Container image | `lightx2v-fl:ppu-flagos` (local experiment image) |
+
+Both backends use the same model, input, seed, precision, and parallel settings.
+After one warm-up run, each backend is measured three times.
+
+### Backend Configuration <!-- omit from toc -->
+
+| Mode | LightX2V platform | Operator path |
+|---|---|---|
+| Native PPU | `cuda` | Existing DreamZero operators |
+| FlagOS on PPU | `flagos` | DreamZero-compatible FlagOS adapters and FlagGems kernels |
+
+The PPU runtime exposes a CUDA-compatible torch API, so `PLATFORM=cuda` denotes
+the native PPU path rather than an NVIDIA GPU. FlagCX was disabled for both
+backends, and distributed communication used the vendor NCCL implementation.
+
+### Results <!-- omit from toc -->
+
+| Backend | DiT time (3 runs) | Pipeline time (3 runs) |
+|---|---:|---:|
+| Native LightX2V on PPU | 78.53 ± 0.40 s | 81.53 ± 0.44 s |
+| LightX2V + FlagOS on PPU | 85.34 ± 0.39 s | 88.35 ± 0.36 s |
+
+Values are the mean ± sample standard deviation after one warm-up run. Both
+backends successfully generated the DreamZero video and action outputs. The
+FlagOS logs confirmed the `flagos` platform and FlagGems attention dispatch,
+with no torch fallback reported.
+
+This validates the DreamZero I2VA execution path through the plugin, but the
+current FlagOS implementation is not yet a performance optimization for this
+PPU configuration: the native path was faster in this experiment.
+
+### Visual Comparison <!-- omit from toc -->
+
+<table>
+  <thead>
+    <tr>
+      <th>Native LightX2V on PPU</th>
+      <th>LightX2V + FlagOS on PPU</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <video controls muted playsinline preload="metadata" width="100%">
+          <source src="{{ site.baseurl }}/assets/flagos-plugin/dreamzero-native.mp4" type="video/mp4">
+        </video>
+      </td>
+      <td>
+        <video controls muted playsinline preload="metadata" width="100%">
+          <source src="{{ site.baseurl }}/assets/flagos-plugin/dreamzero-flagos.mp4" type="video/mp4">
+        </video>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Both runs produced a 141-frame, 640 × 352 video at 5 FPS and a finite
+384 × 8 action array. The outputs are not bit-identical, as expected from
+different operator implementations, but both complete the same DreamZero task
+with the same input and sampling configuration.
+
 ## Limitations and Next Steps
 
 The current plugin should be treated as an MVP integration path rather than a
@@ -421,7 +511,8 @@ work is hardware validation:
 - confirm numerical alignment for Attention, RoPE, Norm, and quantized MatMul;
 - benchmark FlagGems kernels against chip-native tuned kernels;
 - validate FlagCX behavior under LightX2V parallel workloads;
-- expand model coverage beyond the initial Wan T2V configs;
+- expand model coverage beyond the validated Wan T2V and DreamZero I2VA
+  configurations;
 - upstream the entry-point hook so `pip install lightx2v-plugin-fl` becomes the
   normal activation path.
 

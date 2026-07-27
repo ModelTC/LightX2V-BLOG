@@ -1,12 +1,12 @@
 ---
 layout: post
-title: "Wan2.2-NVFP4-Sparse: Extremely Fast Wan 2.2 14B Inference"
+title: "LightWan2.2-A14B: Extremely Fast Wan 2.2 14B Inference"
 author: "Chengtao Lv, Zihao Peng, LightX2V Team"
 date: 2026-07-11
 tags: [Wan2.2, NVFP4, Sparse Attention, Sequence Parallel, Video Generation]
 ---
 
-[![HuggingFace](https://img.shields.io/badge/HuggingFace-Wan2.2--NVFP4--Sparse-yellow)](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-LightWan2.2--A14B-yellow)](https://huggingface.co/lightx2v/LightWan2.2-A14B)
 
 This blog post explains how to accelerate the Wan 2.2 14B model by 600%, achieving real-time video generation at 19.7 FPS for 5-second 720p videos on RTX 5090 GPUs.
 
@@ -48,7 +48,7 @@ The first and most direct way to reduce video generation latency is to reduce th
 
 The challenge is how to make few-step distillation scalable without sacrificing video quality, diversity, and motion dynamics. The comparison below summarizes the main design choices.
 
-![Phased DMD overview]({{ site.baseurl }}/assets/wan22-nvfp4-sparse/phaseddmd.png)
+![Phased DMD overview]({{ site.baseurl }}/assets/lightwan22-a14b/phaseddmd.png)
 
 *Phased DMD compared with direct multi-step distillation and stochastic gradient truncation.*
 
@@ -176,7 +176,7 @@ As a result, the computational and memory costs scale with the number of active 
 
 ## Multi-GPU Inference
 
-After pushing single-GPU acceleration close to its practical limit, Wan2.2-NVFP4-Sparse achieves more than a 50x speedup over the original model. However, single-GPU inference still remains far from real-time performance, as shown by the benchmark results below. The LightX2V team has therefore developed a series of optimizations for multi-GPU distributed inference, enabling a 14B video generation model to achieve true real-time performance at 720p.
+After pushing single-GPU acceleration close to its practical limit, LightWan2.2-A14B achieves more than a 50x speedup over the original model. However, single-GPU inference still remains far from real-time performance, as shown by the benchmark results below. The LightX2V team has therefore developed a series of optimizations for multi-GPU distributed inference, enabling a 14B video generation model to achieve true real-time performance at 720p.
 
 LightX2V exposes these optimizations through the `parallel` section of the config. An example configuration is:
 
@@ -270,19 +270,19 @@ Scripts:
 | Method                                                                                                                  | Task | GPU Number | Resolution | NFE | E2E Latency | Speedup |
 | ----------------------------------------------------------------------------------------------------------------------- | :--: | ---------: | ---------: | --: | ----------: | ------: |
 | Wan2.2-T2V-14B                                                                                                         | T2V  |          1 |       480p |  40 |      734.0s |    1.0x |
-| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | T2V  |          1 |       480p |   4 |        9.1s |   80.7x |
-| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | T2V  |          8 |       480p |   4 |        1.9s |  382.3x |
+| [**LightWan2.2-A14B**](https://huggingface.co/lightx2v/LightWan2.2-A14B)                                           | T2V  |          1 |       480p |   4 |        9.1s |   80.7x |
+| [**LightWan2.2-A14B**](https://huggingface.co/lightx2v/LightWan2.2-A14B)                                           | T2V  |          8 |       480p |   4 |        1.9s |  382.3x |
 | Wan2.2-T2V-14B                                                                                                         | T2V  |          1 |       720p |  40 |     2668.0s |    1.0x |
-| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | T2V  |          1 |       720p |   4 |       22.5s |  118.7x |
-| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | T2V  |          8 |       720p |   4 |        3.8s |  705.8x |
+| [**LightWan2.2-A14B**](https://huggingface.co/lightx2v/LightWan2.2-A14B)                                           | T2V  |          1 |       720p |   4 |       22.5s |  118.7x |
+| [**LightWan2.2-A14B**](https://huggingface.co/lightx2v/LightWan2.2-A14B)                                           | T2V  |          8 |       720p |   4 |        3.8s |  705.8x |
 | Wan2.2-I2V-14B                                                                                                         | I2V  |          1 |       480p |  40 |      787.0s |    1.0x |
 | [**TurboWan2.2-I2V-A14B**](https://huggingface.co/TurboDiffusion/TurboWan2.2-I2V-A14B-720P)                              | I2V  |          1 |       480p |   4 |       37.2s |   21.2x |
-| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | I2V  |          1 |       480p |   4 |       10.7s |   73.9x |
-| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | I2V  |          8 |       480p |   4 |        2.4s |  323.9x |
+| [**LightWan2.2-A14B**](https://huggingface.co/lightx2v/LightWan2.2-A14B)                                           | I2V  |          1 |       480p |   4 |       10.7s |   73.9x |
+| [**LightWan2.2-A14B**](https://huggingface.co/lightx2v/LightWan2.2-A14B)                                           | I2V  |          8 |       480p |   4 |        2.4s |  323.9x |
 | Wan2.2-I2V-14B                                                                                                         | I2V  |          1 |       720p |  40 |     2685.0s |    1.0x |
 | [**TurboWan2.2-I2V-A14B**](https://huggingface.co/TurboDiffusion/TurboWan2.2-I2V-A14B-720P)                              | I2V  |          1 |       720p |   4 |       63.6s |   42.2x |
-| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | I2V  |          1 |       720p |   4 |       26.7s |  100.5x |
-| [**Wan2.2-NVFP4-Sparse**](https://huggingface.co/lightx2v/Wan2.2-NVFP4-Sparse)                                           | I2V  |          8 |       720p |   4 |        4.5s |  599.3x |
+| [**LightWan2.2-A14B**](https://huggingface.co/lightx2v/LightWan2.2-A14B)                                           | I2V  |          1 |       720p |   4 |       26.7s |  100.5x |
+| [**LightWan2.2-A14B**](https://huggingface.co/lightx2v/LightWan2.2-A14B)                                           | I2V  |          8 |       720p |   4 |        4.5s |  599.3x |
 
 ### Benchmark Notes
 

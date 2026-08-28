@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "LightX2V Warmup and Compile: Optimizing Cold Starts and Steady-State Inference"
-author: "Bilang Zhang, LightX2V Team"
+author: "LightX2V Team"
 date: 2026-07-30
 tags: [Warmup, Dynamic Compilation]
 ---

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "LightX2V Reuse: Cross-Worker Encoder Caching and Segment Reuse for Long-Form InfiniteTalk Videos"
-author: "Bilang Zhang, LightX2V Team"
+author: "LightX2V Team"
 date: 2026-08-26
 tags: [Reuse, Encoder Cache, InfiniteTalk, Video Generation]
 ---

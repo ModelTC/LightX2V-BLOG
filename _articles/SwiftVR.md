@@ -9,7 +9,7 @@ tags: [SwiftVR, Video Restoration, Inference Optimization]
 
 [SwiftVR](https://github.com/H-oliday/SwiftVR/tree/5ca168cef6ca7200f135fdfea85e5e13d12c5b53) uses Wan2.2-TI2V-5B to restore low-resolution video to higher resolutions in one generative step. It is the first generative video restoration model to achieve **real-time 1080p streaming on a consumer GPU**. Mask-free shifted-window attention (MFSWA) reduces attention cost, and a Restoration-aware Autoencoder (ReAE) maps between pixels and latent features. SwiftVR processes long videos in temporal chunks. Each chunk requires one diffusion Transformer (DiT) forward pass, while ReAE preserves causal state across chunks.
 
-LightX2V integrates SwiftVR natively and optimizes the complete restoration pipeline. We first reduce computation and memory use on one GPU by reordering ReAE operations and controlling the number of frames processed together. Causal boundary exchange then lets multiple GPUs restore different chunks of the same video in parallel. Finally, we batch output from the decoder’s final layers and encode video within each process so restored frames reach the output file sooner. **See the [SwiftVR-LightX2V usage guide](https://github.com/ModelTC/LightX2V/blob/main/scripts/swiftvr/README.md) for model preparation, service deployment, and request examples.**
+LightX2V integrates SwiftVR natively and optimizes the complete restoration pipeline. We first reduce computation and memory use on one GPU by reordering ReAE operations and controlling the number of frames processed together. Causal boundary exchange then lets multiple GPUs restore different chunks of the same video in parallel. Finally, we batch output from the decoder’s final layers and encode video within each process so restored frames reach the output file sooner. **See the [SwiftVR-LightX2V usage guide](https://github.com/ModelTC/LightX2V/blob/main/scripts/swiftvr) for model preparation, service deployment, and request examples.**
 
 The H100 workload is **4× video super-resolution**: **640×360** input and **2560×1440** output, with both width and height scaled by a factor of 4. The video contains **361 frames at 24 FPS**, and the output retains its frame count and frame rate. All resolutions use width × height. We also use this workload to measure each optimization independently.
 
@@ -203,4 +203,4 @@ The table below reports compute performance for individual chunks in steady stat
 
 ## Usage
 
-See the [SwiftVR usage guide](https://github.com/ModelTC/LightX2V/blob/main/scripts/swiftvr/README.md) for model preparation, service deployment, and request examples.
+See the [SwiftVR-LightX2V usage guide](https://github.com/ModelTC/LightX2V/blob/main/scripts/swiftvr) for model preparation, service deployment, and request examples.

@@ -15,23 +15,25 @@ The H100 workload is **4× video super-resolution**: **640×360** input and **25
 
 On **H100 80GB**, the official implementation takes **17.781 s** to process the full video. LightX2V takes **9.297 s** on one GPU, a **47.72%** reduction. Four GPUs reduce the time to **2.870 s**, a **6.20×** speedup over the official single-GPU implementation. LightX2V also reduces peak memory per request on one GPU from the official implementation’s **51.059 GiB to 17.507 GiB**, a reduction of about **65.71%**.
 
-| Implementation | GPU | Full video time (s) | Steady-state time (s/24 frames) | Steady-state FPS | Peak Mem. (GiB) |
-|---|---:|---:|---:|---:|---:|
-| Official SwiftVR | 1 | 17.781 | 0.7509 | 31.96 | 51.059 |
-| LightX2V | 1 | 9.297 | **0.5811** | **41.30** | **17.507** |
-| LightX2V | 2 | 5.191 | 0.5879 | 40.82 | 20.784 |
-| LightX2V | 4 | **2.870** | 0.6112 | 39.26 | 20.919 |
+| Implementation | GPU | Full video time (s) | Throughput (FPS) | Peak Mem. (GiB) |
+|---|---:|---:|---:|---:|
+| Official SwiftVR | 1 | 17.781 | 20.30 | 51.059 |
+| LightX2V | 1 | 9.297 | 38.83 | **17.507** |
+| LightX2V | 2 | 5.191 | 69.55 | 20.784 |
+| LightX2V | 4 | **2.870** | **125.78** | 20.919 |
 
-**Full video time** covers frame reading through completion of the output file, including communication and final segment concatenation for multiple GPUs. **Steady-state FPS = 24 / steady-state chunk time** measures the GPU processing rate for one chunk. Each configuration processes five consecutive requests; we report the mean of the last four. **Peak Mem.** is the mean NVML memory peak across those four requests. For multiple GPUs, we take the largest per-GPU peak within each request, then average those values. Memory measurement includes the first chunk but excludes model loading and startup warmup.
+In both overview tables, **full video time** covers frame reading through completion of the output file, including model restoration, data transfer, and video encoding. Multi-GPU runs also include communication and final segment concatenation. **Throughput (FPS) = 361 / mean full video time** measures how many frames the complete pipeline processes per second. The output video's playback frame rate remains **24 FPS**.
+
+**Peak Mem.** is the mean request peak measured by NVML. Multi-GPU runs use the largest per-GPU peak for each request. See <a href="#validation">Experimental Setup and Validation</a> for sampling and aggregation details.
 
 On **RTX 5090**, LightX2V and the official implementation use the same input video and produce **1920×1080 output with 361 frames at 24 FPS**. The official implementation takes **29.233 s** on one GPU, while LightX2V takes **13.678 s**, a reduction of about **53.21%**. Four GPUs reduce the time to **3.982 s**, a speedup of about **7.34×** over the official single-GPU implementation. Peak memory per request on one GPU falls from **31.781 GiB to 16.861 GiB**, a reduction of about **46.95%**.
 
-| Implementation | GPU | Full video time (s) | Steady-state time (s/24 frames) | Steady-state FPS | Peak Mem. (GiB) |
-|---|---:|---:|---:|---:|---:|
-| Official SwiftVR | 1 | 29.233 | 1.0726 | 22.38 | 31.781 |
-| LightX2V | 1 | 13.678 | **0.8649** | **27.75** | **16.861** |
-| LightX2V | 2 | 7.417 | 0.8658 | 27.72 | 18.730 |
-| LightX2V | 4 | **3.982** | 0.9055 | 26.51 | 18.732 |
+| Implementation | GPU | Full video time (s) | Throughput (FPS) | Peak Mem. (GiB) |
+|---|---:|---:|---:|---:|
+| Official SwiftVR | 1 | 29.233 | 12.35 | 31.781 |
+| LightX2V | 1 | 13.678 | 26.39 | **16.861** |
+| LightX2V | 2 | 7.417 | 48.67 | 18.730 |
+| LightX2V | 4 | **3.982** | **90.66** | 18.732 |
 
 <a id="pipeline"></a>
 
@@ -45,11 +47,11 @@ Low-resolution chunk → Upsample to target size → ReAE encode → One-step Di
 
 DiT runs at a fixed timestep, with self-attention alternating between regular and shifted windows. LightX2V arranges these windows into dense batches for its existing attention backends and reuses Wan Transformer execution components. Converting the weight names offline lets LightX2V load the official weights directly.
 
-Long videos are divided into temporal chunks. With `clip_len=24`, the first chunk of this video reads 28 frames, middle chunks read 24, and the final chunk reads the remainder. ReAE preserves boundary features at each layer across chunks, while DiT tracks global temporal positions. After decoding, the first chunk drops the 3 frames used for temporal alignment. The final chunk writes only valid frames, keeping the total output frame count equal to the input.
+Long videos are divided into temporal chunks. With `clip_len=24`, the reader takes 28 frames for the first chunk, 24 for each middle chunk, and the remaining frames for the final chunk. ReAE preserves boundary features at each layer across chunks, while DiT tracks global temporal positions. After decoding, the first chunk drops the 3 frames used for temporal alignment. The final chunk writes only valid frames, keeping the total output frame count equal to the input.
 
-DiT computes in the smaller latent space, while ReAE progressively expands features into high-resolution pixels. More frames per batch and larger spatial dimensions increase ReAE computation and memory use. We therefore change the decoding order first, then control the number of frames processed together.
+DiT computes in the smaller latent space, while ReAE progressively expands features into high-resolution pixels. High-resolution features are costly to compute, and processing more frames together increases the memory occupied by intermediate features. We therefore change the decoding order first, then control the number of frames processed together.
 
-## Reducing ReAE Computation at High Resolutions
+## Reducing ReAE Computation and Memory Use
 
 ### TemporalGrow: Compute Before Spatial Upsampling
 
@@ -68,10 +70,10 @@ LightX2V moves all three TemporalGrow operations before their adjacent nearest-n
 
 We compare the two orders on one H100, with all other settings held constant:
 
-| TemporalGrow order | Full video time (s) | Steady-state time (s/24 frames) | Steady-state FPS | Peak Mem. (GiB) |
-|---|---:|---:|---:|---:|
-| After upsampling | 10.049 | 0.6305 | 38.06 | 21.531 |
-| Before upsampling | **9.297** | **0.5811** | **41.30** | **17.507** |
+| TemporalGrow order | Full video time (s) | Chunk compute time (s/24 frames) | Peak Mem. (GiB) |
+|---|---:|---:|---:|
+| After upsampling | 10.049 | 0.6305 | 21.531 |
+| Before upsampling | **9.297** | **0.5811** | **17.507** |
 
 Moving TemporalGrow earlier reduces full video time by **7.48%** and peak memory per request by **4.023 GiB (18.69%)**.
 
@@ -79,19 +81,19 @@ We also decoded the same DiT output latents with the same weights in both execut
 
 <a id="frame-batching"></a>
 
-### ReAE Frame Batching: Keeping Fewer Intermediate Features in Memory
+### ReAE Frame Batching: Reducing Intermediate Memory Use
 
-Frame batching further reduces the high-resolution intermediate features held in memory. LightX2V uses `reae_frame_batch_size` to process small batches through consecutive ReAE layers that operate independently on each frame. A value of `1` processes one frame at a time. With `2`, two frames pass through the entire group of operators before the next two begin. With `0`, the group processes the current video chunk as a whole.
+Frame batching keeps fewer high-resolution intermediate features in memory at once. LightX2V uses `reae_frame_batch_size` to process small batches through consecutive ReAE layers that operate independently on each frame. A value of `1` processes one frame at a time. With `2`, two frames pass through the entire group of operators before the next two begin. With `0`, the group processes the current video chunk as a whole.
 
 The key is to **pass each small batch through the entire group of operators**. Batching only one convolution still requires concatenating the full chunk for the next layer, leaving many complete high-resolution intermediates in memory. Running each batch through the group keeps only that batch’s intermediate features and writes the final results into one output buffer. MemoryBlocks with causal dependencies retain their existing state rules.
 
 The following table compares three frame batch sizes on one H100:
 
-| `reae_frame_batch_size` | Full video time (s) | Steady-state time (s/24 frames) | Steady-state FPS | Peak Mem. (GiB) |
-|---|---:|---:|---:|---:|
-| 0, full chunk | **9.065** | **0.5669** | **42.34** | 29.329 |
-| 1 | 9.297 | 0.5811 | 41.30 | **17.507** |
-| 2 | 9.228 | 0.5764 | 41.64 | 17.893 |
+| `reae_frame_batch_size` | Full video time (s) | Chunk compute time (s/24 frames) | Peak Mem. (GiB) |
+|---|---:|---:|---:|
+| 0, full chunk | **9.065** | **0.5669** | 29.329 |
+| 1 | 9.297 | 0.5811 | **17.507** |
+| 2 | 9.228 | 0.5764 | 17.893 |
 
 **batch=1 uses the least memory of these three configurations**. Its request peak is **17.507 GiB**, **40.31%** below full-chunk execution, with a full video time of **9.297 s**.
 
@@ -118,7 +120,7 @@ Restoring chunk 1 requires history from chunk 0. If each chunk had to wait for i
 
 ### ReAE: Causal Halo Exchange
 
-A ReAE MemoryBlock concatenates the current frame’s input features with those of the previous frame, then applies a convolution. Let A, B, and C be the current chunk’s features, and P the last frame from the previous chunk. The layer processes these three input pairs:
+A ReAE MemoryBlock concatenates the current frame’s input features with those of the previous frame, then applies a convolution. Consider a three-frame example. At this layer, A, B, and C denote each frame’s input features; P denotes those of the previous chunk’s last frame. The layer processes these three input pairs:
 
 ```text
 Current frame:    A       B       C
@@ -147,7 +149,7 @@ DiT’s context across chunks comes from **input latents produced by the ReAE en
 
 Causal Halo Exchange in ReAE and chunk parallelism in DiT let GPUs process different chunks concurrently from encoding through decoding. ReAE history boundaries and final-chunk handling remain active even with `dit_overlap=0`. The [streaming implementation](https://github.com/ModelTC/LightX2V/blob/40744764aacc141166d9aa9c9596ba47ab1eab0e/lightx2v/models/networks/swiftvr/streaming.py#L81) prepares input history before model prediction.
 
-The official version used in this comparison runs on one GPU. On H100, LightX2V processes the same video in **5.191 s on two GPUs** and **2.870 s on four**, giving **1.79×** and **3.24×** speedups over LightX2V on one GPU. At 1080p on RTX 5090, two and four GPUs provide approximately **1.84×** and **3.43×** speedups over LightX2V on one RTX 5090. These times include encoding in each GPU process and final segment concatenation.
+The official version used in this comparison runs on one GPU. On H100, LightX2V processes the same video in **5.191 s on two GPUs** and **2.870 s on four**, giving **1.79×** and **3.24×** speedups over LightX2V on one GPU. At 1080p on RTX 5090, two and four GPUs provide approximately **1.84×** and **3.43×** speedups over LightX2V on one RTX 5090. These times include video segment encoding and final concatenation.
 
 <a id="output"></a>
 
@@ -161,11 +163,11 @@ LightX2V also overlaps frame reading, data movement, and video encoding with GPU
 
 On two H100 GPUs, we separately revert to full-chunk output and FFmpeg subprocess encoding, keeping all other settings unchanged:
 
-| Two-GPU output path | Full video time (s) | Steady-state time (s/24 frames) | Steady-state FPS | Peak Mem. (GiB) |
-|---|---:|---:|---:|---:|
-| 4 frames at a time + PyAV | **5.191** | 0.5879 | 40.82 | 20.784 |
-| Full-chunk output + PyAV | 5.254 | 0.5877 | 40.84 | 20.666 |
-| 4 frames at a time + FFmpeg subprocess | 5.360 | 0.5875 | 40.85 | 20.784 |
+| Two-GPU output path | Full video time (s) | Peak Mem. (GiB) |
+|---|---:|---:|
+| 4 frames at a time + PyAV | **5.191** | 20.784 |
+| Full-chunk output + PyAV | 5.254 | 20.666 |
+| 4 frames at a time + FFmpeg subprocess | 5.360 | 20.784 |
 
 Compared with full-chunk output, decoder output batching reduces full video time by **1.21%**. Compared with FFmpeg subprocess encoding, PyAV reduces it by **3.16%**. Both comparisons measure the complete pipeline, including pixel transfer, color format conversion, and codec execution.
 
@@ -175,8 +177,27 @@ Compared with full-chunk output, decoder output batching reduces full video time
 
 - **H100 environment and configuration:** H100 80GB HBM3, PyTorch 2.11.0+cu130, CUDA 13.0, and cuDNN 9.19.0. Both implementations use BF16 and FlashAttention 3, with no quantization or CPU offload.
 - **Request statistics:** We launch each configuration once, process five consecutive requests, and report the mean of the last four. Timing excludes model loading, startup warmup, and client polling.
-- **Sampling:** Steady-state timing uses middle chunks **2–13** from the last four requests: **48 chunks**, each producing 24 frames. It covers only GPU preprocessing, model restoration, and necessary communication. We sample NVML approximately every **10 ms** throughout each request, including the first chunk. For one GPU, we record the request peak; for multiple GPUs, we take the largest per-GPU peak within each request. We average the peaks from the last four requests and divide bytes by **1024³** to report GiB.
+- **Chunk timing:** We average compute time across middle chunks **2–13** from the last four requests: **48 chunks** in steady state, each producing 24 frames. Timing covers only GPU preprocessing, model restoration, and necessary communication.
+- **Memory sampling:** We sample NVML approximately every **10 ms** throughout each request, including the first chunk but excluding model loading and startup warmup. For one GPU, we record the request peak; for multiple GPUs, we take the largest per-GPU peak within each request. We average the peaks from the last four requests and divide bytes by **1024³** to report GiB.
 - **Output validation:** LightX2V outputs on both platforms passed full decoding checks and retain **361 frames at 24 FPS**. H100 outputs are **2560×1440**. All **15 outputs** from the 5090 tests are **1920×1080**, with no audio track.
+
+<details markdown="block">
+<summary>Steady-state performance per chunk (click to expand)</summary>
+
+The table below reports compute performance for individual chunks in steady state. **Chunk processing rate (FPS) = 24 / mean chunk compute time**. Timing excludes video I/O and encoding. For multiple GPUs, this still measures the processing rate of one chunk, not overall service throughput. Full video throughput appears in the overview tables.
+
+| GPU model | Implementation | GPU | Chunk compute time (s/24 frames) | Chunk processing rate (FPS) |
+|---|---|---:|---:|---:|
+| H100 | Official SwiftVR | 1 | 0.7509 | 31.96 |
+| H100 | LightX2V | 1 | 0.5811 | 41.30 |
+| H100 | LightX2V | 2 | 0.5879 | 40.82 |
+| H100 | LightX2V | 4 | 0.6112 | 39.26 |
+| RTX 5090 | Official SwiftVR | 1 | 1.0726 | 22.38 |
+| RTX 5090 | LightX2V | 1 | 0.8649 | 27.75 |
+| RTX 5090 | LightX2V | 2 | 0.8658 | 27.72 |
+| RTX 5090 | LightX2V | 4 | 0.9055 | 26.51 |
+
+</details>
 
 <a id="usage"></a>
 

@@ -2,7 +2,7 @@
 layout: post
 title: "SwiftVR Inference Optimization: From One GPU to Causal Chunk Parallelism"
 subtitle: "Reducing high-resolution intermediate computation and running ReAE and DiT across multiple GPUs for a single video"
-author: "LightX2V Team"
+author: "LightX2V Team and SwiftVR Team"
 date: 2026-09-18
 tags: [SwiftVR, Video Restoration, Inference Optimization]
 ---

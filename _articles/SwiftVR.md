@@ -204,3 +204,16 @@ The table below reports compute performance for individual chunks in steady stat
 ## Usage
 
 See the [SwiftVR-LightX2V usage guide](https://github.com/ModelTC/LightX2V/blob/main/scripts/swiftvr) for model preparation, service deployment, and request examples.
+
+## Citation
+
+If you use SwiftVR in your research, please cite the [SwiftVR paper](https://arxiv.org/abs/2606.09516):
+
+```bibtex
+@article{yan2026swiftvr,
+  title={SwiftVR: Real-Time One-Step Generative Video Restoration},
+  author={Yan, Jiaqi and Chen, Xiangyu and Zhong, Xinlin and Huang, Haibin and Zhang, Chi and Liu, Jie and Zhou, Jiantao and Li, Xuelong},
+  journal={arXiv preprint arXiv:2606.09516},
+  year={2026}
+}
+```

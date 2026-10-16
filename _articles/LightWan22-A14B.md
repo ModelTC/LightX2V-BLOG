@@ -194,76 +194,13 @@ Here, seq_p_size sets the number of GPUs in the sequence-parallel group. seq_p_a
 
 ## 🚀 Quick Start
 
-We strongly recommend using the official LightX2V Docker image for the cleanest environment and best reproducibility.
+Follow the [LightWan2.2-A14B inference guide](https://huggingface.co/lightx2v/LightWan2.2-A14B#-quick-start) for environment setup, weight preparation, and single-GPU or eight-GPU inference.
 
-### Option A: Docker Recommended
+For single-GPU inference, select the NVFP4 sparse-attention configuration listed in the guide. The launch scripts use different configurations by default.
 
-```bash
-# 1. Pull LightX2V Docker image
-docker pull lightx2v/lightx2v:26052801-cu130-5090
+Update the model, checkpoint, and input/output paths before running commands from the LightX2V repository root.
 
-# 2. Run single-GPU inference
-# Text-to-video
-bash scripts/wan22/extreme/run_wan22_moe_t2v_extreme.sh
-# Image-to-video
-bash scripts/wan22/extreme/run_wan22_moe_i2v_extreme.sh
-
-# 3. Run multi-GPU sequence-parallel inference
-# Text-to-video
-bash scripts/wan22/extreme/run_wan22_moe_t2v_extreme_sp_parallel.sh
-# Image-to-video
-bash scripts/wan22/extreme/run_wan22_moe_i2v_extreme_sp_parallel.sh
-```
-
-### Option B: Manual Installation
-
-If Docker is not available, install the environment manually:
-
-```bash
-# 1. Install LightX2V
-git clone https://github.com/ModelTC/LightX2V.git
-cd LightX2V
-uv pip install -v .
-
-# 2. Install NVFP4 Kernel
-pip install scikit_build_core uv
-git clone https://github.com/NVIDIA/cutlass.git
-cd lightx2v_kernel
-
-MAX_JOBS=$(nproc) CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) \
-uv build --wheel \
-  -Cbuild-dir=build . \
-  -Ccmake.define.CUTLASS_PATH=/path/to/cutlass \
-  --verbose --color=always --no-build-isolation
-
-pip install dist/*whl --force-reinstall --no-deps
-
-# 3. Run single-GPU inference
-# Text-to-video
-bash scripts/wan22/extreme/run_wan22_moe_t2v_extreme.sh
-# Image-to-video
-bash scripts/wan22/extreme/run_wan22_moe_i2v_extreme.sh
-
-# 4. Run multi-GPU sequence-parallel inference
-# Text-to-video
-bash scripts/wan22/extreme/run_wan22_moe_t2v_extreme_sp_parallel.sh
-# Image-to-video
-bash scripts/wan22/extreme/run_wan22_moe_i2v_extreme_sp_parallel.sh
-```
-
-> **Note:** The multi-GPU scripts use sequence parallelism with the configuration shown above.
-
-Scripts:
-
-**Single-GPU:**
-
-- [run_wan22_moe_t2v_extreme.sh](https://github.com/ModelTC/LightX2V/blob/main/scripts/wan22/extreme/run_wan22_moe_t2v_extreme.sh)
-- [run_wan22_moe_i2v_extreme.sh](https://github.com/ModelTC/LightX2V/blob/main/scripts/wan22/extreme/run_wan22_moe_i2v_extreme.sh)
-
-**Multi-GPU:**
-
-- [run_wan22_moe_t2v_extreme_sp_parallel.sh](https://github.com/ModelTC/LightX2V/blob/main/scripts/wan22/extreme/run_wan22_moe_t2v_extreme_sp_parallel.sh)
-- [run_wan22_moe_i2v_extreme_sp_parallel.sh](https://github.com/ModelTC/LightX2V/blob/main/scripts/wan22/extreme/run_wan22_moe_i2v_extreme_sp_parallel.sh)
+## Performance
 
 **Test Environment**: RTX 5090 GPU(s) | LightX2V Framework | End-to-End Latency
 

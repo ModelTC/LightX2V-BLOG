@@ -290,44 +290,20 @@ The decentralized scheduler improves QPS by **1.42x** over the centralized three
 
 ### How to Run (Qwen-2512 T2I Decentralized Deployment)
 
-Taking a 4-GPU (1 Encoder + 3 Transformer) Qwen-2512 T2I decentralized deployment as an example, a single command starts all services:
+Install LightX2V and prepare the Qwen-Image-2512 weights. Check the [deployment guide](https://github.com/ModelTC/LightX2V/blob/main/docs/EN/source/deploy_guides/disagg.md) for configuration and RDMA/Mooncake requirements.
+
+Run from the LightX2V repository root, replacing the model path with your local directory:
 
 ```bash
-git clone git@github.com:ModelTC/LightX2V.git
-cd LightX2V
-bash scripts/server/disagg/qwen/start_qwen_t2i_disagg_decentralized.sh
+export LIGHTX2V_PATH="$(pwd)"
+export QWEN_IMAGE_MODEL_PATH=/path/to/Qwen-Image-2512
+
+bash scripts/server/disagg/qwen/start_qwen_t2i_decentralized.sh
 ```
 
-The script launches Controller → Encoder → Decoder → Transformer×3 (5 processes total) with the default GPU layout:
+The launcher starts six service processes: one Controller, one Encoder, one Decoder, and three Transformer workers. Encoder and Decoder share GPU 0; the Transformer workers use GPUs 1, 2, and 3.
 
-| Role | GPU | Notes |
-|---|---|---|
-| Controller | CPU | RDMA ring buffer only, no GPU needed |
-| Encoder + Decoder | GPU 0 | Shared GPU (both have small memory footprint) |
-| Transformer 1 | GPU 1 | DiT worker |
-| Transformer 2 | GPU 2 | DiT worker |
-| Transformer 3 | GPU 3 | DiT worker |
-
-GPU assignments and the number of Transformers can be customized via environment variables:
-
-```bash
-GPU_ENCODER=0 GPU_DECODER=0 \
-GPU_TRANSFORMER_1=1 GPU_TRANSFORMER_2=2 GPU_TRANSFORMER_3=3 \
-NUM_TRANSFORMERS=3 \
-bash scripts/server/disagg/qwen/start_qwen_t2i_disagg_decentralized.sh
-```
-
-Once the services are up, send requests and query results via the Controller's HTTP API:
-
-```bash
-# Send a generation request
-curl -X POST http://localhost:8080/v1/generate \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "A cute cat on a table", "seed": 42, "aspect_ratio": "16:9"}'
-
-# Check result status
-curl http://localhost:8080/v1/status/{room_id}
-```
+Send generation requests to the Encoder HTTP service on port `8002`. See the [request example](https://github.com/ModelTC/LightX2V/blob/main/docs/EN/source/deploy_guides/disagg.md#44-sending-requests) for request parameters and status polling.
 
 ### Configuration Walkthrough
 
